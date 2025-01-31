@@ -1,0 +1,52 @@
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+migrations/
+venv/
+*.so
+
+.env
+
+# Django
+*.log
+*.pot
+*.pyc
+*.mo
+*.swp
+*~
+staticfiles/
+media/
+
+# Environments
+.env
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Databases
+*.sqlite3
+
+# Migrations
+*/migrations/*
+
+# Coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
