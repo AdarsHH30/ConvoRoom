@@ -1,18 +1,48 @@
-import React from "react";
+import React, { useState } from "react";
 import "../css/Home.css";
+import { useNavigate } from "react-router-dom";
+import { Button } from "../components/ui/button.jsx";
+import { ModeToggle } from "@/components/ModeToggle";
 
 function Home() {
+  const [roomId, setRoomId] = useState("");
+  const [isJoiningRoom, setIsJoiningRoom] = useState(false);
+
+  const navigate = useNavigate();
+  const createRoom = () => {
+    setIsJoiningRoom(false);
+    navigate("/room");
+  };
+
+  const joinRoom = () => {
+    setIsJoiningRoom(true);
+  };
+
   return (
     <>
-      <div className="App">
+      <ModeToggle />
+      <div className="Home">
         <div className="center-container">
-          <button className="create-room-button">Create Room</button>
-          <button className="join-room-button">Join Room</button>
+          <Button onClick></Button>
+          <button onClick={createRoom} className="create-room-button">
+            Create Room
+          </button>
+          <button onClick={joinRoom} className="join-room-button">
+            Join Room
+          </button>
+        </div>
+        <div className="text-field-container">
+          {isJoiningRoom ? (
+            <input
+              type="text"
+              placeholder="Enter Room ID"
+              className="text-field"
+              value={roomId}
+              onChange={(e) => setRoomId(e.target.value)}
+            />
+          ) : null}
         </div>
       </div>
-      <button className="rounded-2xl border-2 border-dashed border-black bg-white px-6 py-3 font-semibold uppercase text-black transition-all duration-300 hover:translate-x-[-4px] hover:translate-y-[-4px] hover:rounded-md hover:shadow-[4px_4px_0px_black] active:translate-x-[0px] active:translate-y-[0px] active:rounded-2xl active:shadow-none">
-        Hover me
-      </button>
     </>
   );
 }

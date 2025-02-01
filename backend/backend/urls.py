@@ -19,7 +19,8 @@ from django.urls import path
 from api.views import *
 
 urlpatterns = [
-    path('api/hey/', hey),
+    # path('api/hey/', hey),
     path('api/hello/', hello_world),
     path('admin/', admin.site.urls),
+    path('api/generateRoomId/', generateRoomId),
 ]
