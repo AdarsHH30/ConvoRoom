@@ -3,7 +3,7 @@ import "../css/Home.css";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button.jsx";
 import { ModeToggle } from "@/components/ModeToggle";
-
+import { Input } from "@/components/ui/input";
 function Home() {
   const [roomId, setRoomId] = useState("");
   const [isJoiningRoom, setIsJoiningRoom] = useState(false);
@@ -21,25 +21,23 @@ function Home() {
   return (
     <>
       <ModeToggle />
-      <div className="Home">
+      <div className="Home flex flex-col">
         <div className="center-container">
-          <Button onClick></Button>
-          <button onClick={createRoom} className="create-room-button">
+          <Button onClick={createRoom} style={{ marginRight: "20px" }}>
             Create Room
-          </button>
-          <button onClick={joinRoom} className="join-room-button">
-            Join Room
-          </button>
+          </Button>
+          <Button onClick={joinRoom}>Join Room</Button>
         </div>
         <div className="text-field-container">
           {isJoiningRoom ? (
-            <input
-              type="text"
-              placeholder="Enter Room ID"
-              className="text-field"
-              value={roomId}
-              onChange={(e) => setRoomId(e.target.value)}
-            />
+            <div style={{ marginTop: "10px" }}>
+              <Input
+                type="text"
+                placeholder="Enter Room ID"
+                value={roomId}
+                onChange={(e) => setRoomId(e.target.value)}
+              />
+            </div>
           ) : null}
         </div>
       </div>
