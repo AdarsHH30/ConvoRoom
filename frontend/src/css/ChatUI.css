@@ -1,0 +1,56 @@
+.chat-window {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  width: 100%;
+  background-color:hsl(0 0% 98%);
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+}   
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+  border-radius: 5px 5px 0 0;
+  background-color: hsl(0, 0%, 0%);
+}
+.chat-header h2 {
+  color: hsl(0, 0%, 98%);
+  font-size: 3rem;
+  font-weight: 500;
+}
+
+.chat-body {
+    .Bot-message {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        margin: 1rem;
+        background-color: black;
+        padding: 1rem;
+        width: 50%;
+        text-align: center;
+
+        border-radius: 40px;
+        padding-left: 1rem; /* Added space before each text */
+        .p {
+            align-items: center;
+        }
+    }
+    .User-message {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        margin: 1rem;
+        background-color: rgb(240, 15, 15);
+        padding: 1rem;
+        width: 50%;
+        text-align: right;
+        border-radius: 40px;
+        padding-right: 1rem; /* Added space before each text */
+        color: white; /* Ensure text is visible on black background */
+    }
+    
+}

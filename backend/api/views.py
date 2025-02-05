@@ -24,3 +24,9 @@ def getReactData(request):
     data = request.data
     print(data)
     return Response({"message": "Data received"})
+
+
+@api_view(["GET"])
+def returnAIresponse(request):
+
+    return Response({"message": "AI response received"})
