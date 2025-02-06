@@ -1,55 +1,81 @@
 import React, { useState } from "react";
-import "../css/ChatUI.css";
 import { Input } from "../components/ui/input";
-import { Button } from "./ui/button";
+import { Button } from "../components/ui/button";
 
 function ChatUI() {
-  const [responseMessage, setResponseMessage] = useState("");
-  const [data, setData] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [inputText, setInputText] = useState("");
 
-  const handleSendData = async () => {
+  const handleSendMessage = async () => {
+    if (!inputText.trim()) return;
+
+    setMessages((prev) => [...prev, { type: "user", text: inputText }]);
+
     try {
       const response = await fetch("http://localhost:8000/api/data/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(inputText),
       });
-      const result = await response.json();
-      setResponseMessage(result.message);
+      const data = await response.json();
+
+      setMessages((prev) => [...prev, { type: "bot", text: data.Response }]);
+      setInputText("");
     } catch (error) {
-      console.error("Error sending data:", error);
-      setResponseMessage("Error sending data");
+      console.error("Error:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          type: "bot",
+          text: "Sorry, I couldn't process your message",
+        },
+      ]);
     }
   };
+
   return (
-    <div className="chat-window">
-      <div className="chat-header">
-        <h2>Chatbot</h2>
-      </div>
-      <div className="chat-body">
-        <div className="chat-body flex flex-col space-y-4 p-4 overflow-y-auto h-96">
-          <div className="Bot-message align-right">
-            <p>Hello! How can I help you today?</p>
-          </div>
-          <div className="User-message align-right">
-            I need help with my account
+    <div className="w-full max-w-2xl mx-auto p-4">
+      <div className="bg-white rounded-lg shadow">
+        <div className="p-4 border-b">
+          <h2 className="text-lg font-semibold">AI Chat</h2>
+        </div>
+
+        <div className="h-96 overflow-y-auto p-4">
+          {messages.map((message, index) => (
+            <div
+              key={index}
+              className={`mb-4 ${
+                message.type === "user" ? "text-right" : "text-left"
+              }`}
+            >
+              <div
+                className={`inline-block p-2 rounded-lg ${
+                  message.type === "user"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-100 text-gray-800"
+                }`}
+              >
+                {message.text}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="p-4 border-t">
+          <div className="flex gap-2">
+            <Input
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              placeholder="Type your message..."
+              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+              className="flex-1"
+            />
+            <Button onClick={handleSendMessage}>Send</Button>
           </div>
         </div>
-      </div>
-      <div className="chat-footer flex flex-col">
-        <Input
-          type="text"
-          placeholder="Type your message here..."
-          className="chat-input"
-          value={data}
-          onChange={(e) => setData(e.target.value)}
-        />
-        {/* <button className="send-button mix-blend-color-dodge">Send</button> */}
-        <Button onClick={handleSendData}>Send</Button>
       </div>
     </div>
   );
 }
+
 export default ChatUI;

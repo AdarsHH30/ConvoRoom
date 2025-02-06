@@ -1,8 +1,28 @@
 from django.shortcuts import render
-import random as Random
-
+import random
+import os
+from dotenv import load_dotenv
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain.memory import ConversationBufferMemory
+from langchain.chains import ConversationChain
+
+
+load_dotenv()
+API_KEY = os.getenv("GOOGLE_API_KEY")
+
+# Initialize langchain
+chat = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=API_KEY)
+memory = ConversationBufferMemory(return_messages=True)
+conversation = ConversationChain(llm=chat, memory=memory, verbose=True)
+
+
+@api_view(["POST"])
+def getReactData(request):
+    data = request.data
+    response = conversation.predict(input=data)
+    return Response({"Response": response})
 
 
 @api_view(["GET"])
@@ -12,55 +32,5 @@ def hello_world(request):
 
 @api_view(["GET"])
 def generateRoomId(request):
-    roomId = Random.randint(1000, 9999)
-    return Response({"roomId": roomId})
-
-
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationChain
-
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-API_KEY = os.getenv("GOOGLE_API_KEY")
-
-print(API_KEY)
-
-
-chat = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=API_KEY)
-# to store chats
-memory = ConversationBufferMemory(return_messages=True)
-# helps to connect chat with memory
-conversation = ConversationChain(llm=chat, memory=memory, verbose=False)
-
-
-@api_view(["POST"])
-def getReactData(request):
-    # # conversation = langChainSetup()
-    # chat = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=API_KEY)
-    # # to store chats
-    # memory = ConversationBufferMemory(return_messages=True)
-
-    # # # helps to connect chat with memory
-    # # data = request.data
-    # # if not data:
-    # #     data = "Who are you"
-    # #     return Response({"error": "No data provided"}, status=400)
-    data = request.data
-
-    # conversation = ConversationChain(llm=chat, memory=memory, verbose=False)
-
-    response = conversation.predict(input=data)
-
-    print(response)
-    # returnAIresponse(data)
-    # returnAiResponse(response)
-    return Response({"message": "Data received"})
-
-
-@api_view(["GET"])
-def returnAiResponse(request, response):
-
-    return Response({"Response": response})
+    room_id = random.randint(1000, 9999)
+    return Response({"roomId": room_id})
