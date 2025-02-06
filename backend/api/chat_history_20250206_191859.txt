@@ -1,0 +1,7 @@
+=== Conversation History ===
+
+You: hey
+
+AI: Hello! My name is Gemini. How can I help you today?
+
+==========================

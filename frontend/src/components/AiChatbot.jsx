@@ -1,12 +1,12 @@
 // Example React component (e.g., DataSender.js)
+// import { Input } from "postcss";
 import React, { useState } from "react";
-
+// import { useFormState } from "react-dom";
 function Chat() {
   const [responseMessage, setResponseMessage] = useState("");
+  const [data, setData] = useState("");
 
   const handleSendData = async () => {
-    const data = { name: "John Doe", email: "john@example.com" };
-
     try {
       const response = await fetch("http://localhost:8000/api/data/", {
         method: "POST",
@@ -26,7 +26,14 @@ function Chat() {
 
   return (
     <div>
+      <input
+        type="text"
+        placeholder="Enter the message"
+        value={data}
+        onChange={(e) => setData(e.target.value)}
+      />
       <button onClick={handleSendData}>Send Data to Django</button>
+
       {responseMessage && <p>{responseMessage}</p>}
     </div>
   );

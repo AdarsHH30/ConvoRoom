@@ -22,35 +22,33 @@
   font-weight: 500;
 }
 
-.chat-body {
-    .Bot-message {
-        display: flex;
-        justify-content: flex-start;
-        align-items: center;
-        margin: 1rem;
-        background-color: black;
-        padding: 1rem;
-        width: 50%;
-        text-align: center;
+.chat-body .Bot-message {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin: 1rem;
+    background-color: black;
+    padding: 1rem;
+    width: 50%;
+    text-align: center;
+    border-radius: 40px;
+    padding-left: 1rem; /* Added space before each text */
+}
 
-        border-radius: 40px;
-        padding-left: 1rem; /* Added space before each text */
-        .p {
-            align-items: center;
-        }
-    }
-    .User-message {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        margin: 1rem;
-        background-color: rgb(240, 15, 15);
-        padding: 1rem;
-        width: 50%;
-        text-align: right;
-        border-radius: 40px;
-        padding-right: 1rem; /* Added space before each text */
-        color: white; /* Ensure text is visible on black background */
-    }
-    
+.chat-body .Bot-message p {
+    align-items: center;
+}
+
+.chat-body .User-message {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin: 1rem;
+    background-color: rgb(240, 15, 15);
+    padding: 1rem;
+    width: 50%;
+    text-align: right;
+    border-radius: 40px;
+    padding-right: 1rem; /* Added space before each text */
+    color: white; /* Ensure text is visible on black background */
 }
