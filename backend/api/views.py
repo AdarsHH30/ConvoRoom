@@ -1,7 +1,6 @@
 from django.shortcuts import render
 import random as Random
 
-
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -30,41 +29,38 @@ API_KEY = os.getenv("GOOGLE_API_KEY")
 print(API_KEY)
 
 
+chat = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=API_KEY)
+# to store chats
+memory = ConversationBufferMemory(return_messages=True)
+# helps to connect chat with memory
+conversation = ConversationChain(llm=chat, memory=memory, verbose=False)
+
+
 @api_view(["POST"])
 def getReactData(request):
-    # conversation = langChainSetup()
-    chat = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=API_KEY)
-    # to store chats
-    memory = ConversationBufferMemory(return_messages=True)
+    # # conversation = langChainSetup()
+    # chat = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=API_KEY)
+    # # to store chats
+    # memory = ConversationBufferMemory(return_messages=True)
 
-    # # helps to connect chat with memory
-    # data = request.data
-    # if not data:
-    #     data = "Who are you"
-    #     return Response({"error": "No data provided"}, status=400)
+    # # # helps to connect chat with memory
+    # # data = request.data
+    # # if not data:
+    # #     data = "Who are you"
+    # #     return Response({"error": "No data provided"}, status=400)
     data = request.data
 
-    conversation = ConversationChain(llm=chat, memory=memory, verbose=False)
+    # conversation = ConversationChain(llm=chat, memory=memory, verbose=False)
 
     response = conversation.predict(input=data)
 
     print(response)
     # returnAIresponse(data)
+    # returnAiResponse(response)
     return Response({"message": "Data received"})
 
 
-def langChainSetup():
-    # create a chat model
-    chat = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=API_KEY)
-    # to store chats
-    memory = ConversationBufferMemory(return_messages=True)
-
-    # helps to connect chat with memory
-    conversation = ConversationChain(llm=chat, memory=memory, verbose=False)
-    return conversation
-
-
 @api_view(["GET"])
-def returnAIresponse(request, userInput):
-    response = f"Received input: {userInput}"
-    return Response({"message": response})
+def returnAiResponse(request, response):
+
+    return Response({"Response": response})
