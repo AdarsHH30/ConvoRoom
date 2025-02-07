@@ -7,6 +7,9 @@ from rest_framework.response import Response
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
+import uuid
+from dataBase import *
+from django.http import JsonResponse
 
 
 load_dotenv()
@@ -32,5 +35,15 @@ def hello_world(request):
 
 @api_view(["GET"])
 def generateRoomId(request):
-    room_id = random.randint(1000, 9999)
+    full_uuid = uuid.uuid4()
+    # Convert to hex and take the first 8 characters (4 bytes)
+    room_id = full_uuid.hex[:5].upper()
+    # room_id = random.randint(1000, 9999)
     return Response({"roomId": room_id})
+
+
+def insert_data(request):
+    collection = db["mycollection"]
+    data = {"message": "Hello MongoDB"}
+    collection.insert_one(data)
+    return JsonResponse({"status": "Data Inserted"})

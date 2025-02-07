@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
+import { Redo } from "lucide-react";
 
 function ChatUI() {
   const [messages, setMessages] = useState([]);
@@ -35,12 +36,17 @@ function ChatUI() {
 
   return (
     <div className="w-full max-w-2xl mx-auto p-4">
-      <div className="bg-white rounded-lg shadow">
+      <div className="rounded-lg shadow" style={{ color: "var(--primary" }}>
         <div className="p-4 border-b">
-          <h2 className="text-lg font-semibold">AI Chat</h2>
+          <h2
+            className="text-lg font-semibold"
+            style={{ color: "var(--primary)" }}
+          >
+            AI Chat
+          </h2>
         </div>
 
-        <div className="h-96 overflow-y-auto p-4">
+        <div className="h-96 overflow-y-auto p-4" style={{ color: "red" }}>
           {messages.map((message, index) => (
             <div
               key={index}
@@ -51,8 +57,8 @@ function ChatUI() {
               <div
                 className={`inline-block p-2 rounded-lg ${
                   message.type === "user"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-100 text-gray-800"
+                    ? "bg-[var(--ring)] "
+                    : "bg-[var(--secondary)] text-[var(--primary)]"
                 }`}
               >
                 {message.text}

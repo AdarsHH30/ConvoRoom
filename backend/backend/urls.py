@@ -25,4 +25,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/generateRoomId/", generateRoomId),
     path("api/data/", getReactData),
+    path("api/insert/", insert_data),
 ]
