@@ -1,14 +1,16 @@
 import React from "react";
+import { useParams } from "react-router-dom";
 import FetchRoomId from "../components/fetchRoomId";
-import Chat from "../components/AiChatbot";
 import ChatUI from "../components/ChatUI";
 
 const Room = () => {
+  const { roomId } = useParams();
+
   return (
     <div>
-      <FetchRoomId />
-      {/* <Chat /> */}
-      <ChatUI />
+      <h1>Room ID: {roomId}</h1>
+      {/* <FetchRoomId roomId={roomId} /> */}
+      <ChatUI roomId={roomId} />
     </div>
   );
 };

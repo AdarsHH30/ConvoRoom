@@ -10,7 +10,7 @@ from langchain.chains import ConversationChain
 import uuid
 from dataBase import *
 from django.http import JsonResponse
-
+from .models import ChatRoom
 
 load_dotenv()
 API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -33,13 +33,38 @@ def hello_world(request):
     return Response({"message": "Hello from Django!"})
 
 
-@api_view(["GET"])
-def generateRoomId(request):
-    full_uuid = uuid.uuid4()
-    # Convert to hex and take the first 8 characters (4 bytes)
-    room_id = full_uuid.hex[:5].upper()
-    # room_id = random.randint(1000, 9999)
+rooms = {}
+
+# for models
+# @api_view(["GET"])
+# def create_room(request):
+#     room_name = "New Room"
+
+#     room = ChatRoom.objects.create(name=room_name, created_by=request.user)
+
+#     room_id = room.id
+#     print(room_id)
+#     return Response({"roomId": room_id})
+
+
+@api_view(["POST"])
+def create_room(request):
+    room_id = str(uuid.uuid4())[:6]
+    rooms[room_id] = {"participants": 0, "max_participants": 4}
     return Response({"roomId": room_id})
+
+
+@api_view(["POST"])
+def join_room(request):
+    room_id = request.data.get("roomId")
+
+    print(room_id)
+    if room_id in rooms:
+        if rooms[room_id]["participants"] < rooms[room_id]["max_participants"]:
+            rooms[room_id]["participants"] += 1
+            return Response({"message": "Joined room successfully"})
+    else:
+        return Response({"error": "Room not found or does not exist"}, status=404)
 
 
 def insert_data(request):

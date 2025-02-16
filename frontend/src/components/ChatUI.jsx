@@ -36,7 +36,7 @@ function ChatUI() {
 
   return (
     <div className="w-full max-w-2xl mx-auto p-4">
-      <div className="rounded-lg shadow" style={{ color: "var(--primary" }}>
+      <div className="rounded-lg shadow" style={{ color: "var(--ring)" }}>
         <div className="p-4 border-b">
           <h2
             className="text-lg font-semibold"
@@ -46,7 +46,10 @@ function ChatUI() {
           </h2>
         </div>
 
-        <div className="h-96 overflow-y-auto p-4" style={{ color: "red" }}>
+        <div
+          className="h-96 overflow-y-auto p-4"
+          style={{ color: "var(--ring)" }}
+        >
           {messages.map((message, index) => (
             <div
               key={index}

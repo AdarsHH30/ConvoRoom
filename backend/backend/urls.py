@@ -23,7 +23,8 @@ urlpatterns = [
     # path('api/hey/', hey),
     path("api/hello/", hello_world),
     path("admin/", admin.site.urls),
-    path("api/generateRoomId/", generateRoomId),
+    path("api/create_room/", create_room),
     path("api/data/", getReactData),
     path("api/insert/", insert_data),
+    path("api/join_room/", join_room),
 ]
