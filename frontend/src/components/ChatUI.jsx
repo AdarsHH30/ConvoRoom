@@ -1,11 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
-import { Redo } from "lucide-react";
 
 function ChatUI() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
+  const roomId = window.location.pathname.split("/").pop();
+
+  useEffect(() => {
+    const savedMessages = localStorage.getItem(`chat_${roomId}`);
+    if (savedMessages) {
+      setMessages(JSON.parse(savedMessages));
+    }
+  }, [roomId]);
+
+  useEffect(() => {
+    localStorage.setItem(`chat_${roomId}`, JSON.stringify(messages));
+  }, [messages, roomId]);
 
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
@@ -16,7 +27,7 @@ function ChatUI() {
       const response = await fetch("http://localhost:8000/api/data/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(inputText),
+        body: JSON.stringify({ message: inputText }),
       });
       const data = await response.json();
 
@@ -26,10 +37,7 @@ function ChatUI() {
       console.error("Error:", error);
       setMessages((prev) => [
         ...prev,
-        {
-          type: "bot",
-          text: "Sorry, I couldn't process your message",
-        },
+        { type: "bot", text: "Sorry, I couldn't process your message" },
       ]);
     }
   };

@@ -1,5 +1,5 @@
 from django.shortcuts import render
-import random
+import random, json
 import os
 from dotenv import load_dotenv
 from rest_framework.decorators import api_view
@@ -15,16 +15,16 @@ from .models import ChatRoom
 load_dotenv()
 API_KEY = os.getenv("GOOGLE_API_KEY")
 
-# Initialize langchain
 chat = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=API_KEY)
 memory = ConversationBufferMemory(return_messages=True)
-conversation = ConversationChain(llm=chat, memory=memory, verbose=True)
+conversation = ConversationChain(llm=chat, memory=memory, verbose=False)
 
 
 @api_view(["POST"])
 def getReactData(request):
-    data = request.data
-    response = conversation.predict(input=data)
+    data = json.loads(request.body)
+    input_text = data.get("message")
+    response = conversation.predict(input=input_text)
     return Response({"Response": response})
 
 
@@ -35,21 +35,10 @@ def hello_world(request):
 
 rooms = {}
 
-# for models
-# @api_view(["GET"])
-# def create_room(request):
-#     room_name = "New Room"
-
-#     room = ChatRoom.objects.create(name=room_name, created_by=request.user)
-
-#     room_id = room.id
-#     print(room_id)
-#     return Response({"roomId": room_id})
-
 
 @api_view(["POST"])
 def create_room(request):
-    room_id = str(uuid.uuid4())[:6]
+    room_id = (str(uuid.uuid4())[:6]).upper()
     rooms[room_id] = {"participants": 0, "max_participants": 4}
     return Response({"roomId": room_id})
 
@@ -57,8 +46,6 @@ def create_room(request):
 @api_view(["POST"])
 def join_room(request):
     room_id = request.data.get("roomId")
-
-    print(room_id)
     if room_id in rooms:
         if rooms[room_id]["participants"] < rooms[room_id]["max_participants"]:
             rooms[room_id]["participants"] += 1
