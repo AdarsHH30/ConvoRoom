@@ -1,11 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 
 function ChatUI() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
+  const messagesEndRef = useRef(null);
   const roomId = window.location.pathname.split("/").pop();
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   useEffect(() => {
     const savedMessages = localStorage.getItem(`chat_${roomId}`);
@@ -43,51 +52,51 @@ function ChatUI() {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-4">
-      <div className="rounded-lg shadow" style={{ color: "var(--ring)" }}>
-        <div className="p-4 border-b">
-          <h2
-            className="text-lg font-semibold"
-            style={{ color: "var(--primary)" }}
-          >
+    <div className="w-full max-w-4xl mx-auto p-4 h-[calc(100vh-2rem)] flex flex-col">
+      <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col">
+        <div className="p-4 border-b bg-[var(--primary)] rounded-t-lg">
+          <h2 className="text-xl font-bold text-[var(--background)]">
             AI Chat
           </h2>
         </div>
 
-        <div
-          className="h-96 overflow-y-auto p-4"
-          style={{ color: "var(--ring)" }}
-        >
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
           {messages.map((message, index) => (
             <div
               key={index}
-              className={`mb-4 ${
-                message.type === "user" ? "text-right" : "text-left"
+              className={`flex ${
+                message.type === "user" ? "justify-end" : "justify-start"
               }`}
             >
               <div
-                className={`inline-block p-2 rounded-lg ${
+                className={`max-w-[70%] break-words p-3 rounded-2xl ${
                   message.type === "user"
-                    ? "bg-[var(--ring)] "
-                    : "bg-[var(--secondary)] text-[var(--primary)]"
-                }`}
+                    ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
+                    : "bg-[var(--secondary)] text-[var(--secondary-foreground)]"
+                } shadow-sm`}
               >
                 {message.text}
               </div>
             </div>
           ))}
+          <div ref={messagesEndRef} />
         </div>
 
-        <div className="p-4 border-t">
+        <div className="p-4 border-t bg-[var(--background)]">
           <div className="flex gap-2">
             <Input
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Type your message..."
               onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-              className="flex-1"
+              className="flex-1 rounded-full"
             />
-            <Button onClick={handleSendMessage}>Send</Button>
+            <Button
+              onClick={handleSendMessage}
+              className=" px-6 bg-[var(--primary)] hover:bg-[var(--primary-foreground)]"
+            >
+              Send
+            </Button>
           </div>
         </div>
       </div>
