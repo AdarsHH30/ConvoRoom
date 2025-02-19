@@ -30,18 +30,22 @@ function ChatUI() {
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
 
-    setMessages((prev) => [...prev, { type: "user", text: inputText }]);
+    const newUserMessage = { type: "user", text: inputText };
+
+    setMessages((prev) => [...prev, newUserMessage]);
 
     try {
       const response = await fetch("http://localhost:8000/api/data/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: inputText }),
+        body: JSON.stringify({ message: inputText, roomId }),
       });
+
       const data = await response.json();
 
-      setMessages((prev) => [...prev, { type: "bot", text: data.Response }]);
-      setInputText("");
+      const botResponse = { type: "bot", text: data.response || "No response" };
+
+      setMessages((prev) => [...prev, botResponse]);
     } catch (error) {
       console.error("Error:", error);
       setMessages((prev) => [
@@ -49,6 +53,8 @@ function ChatUI() {
         { type: "bot", text: "Sorry, I couldn't process your message" },
       ]);
     }
+
+    setInputText("");
   };
 
   return (
@@ -71,8 +77,8 @@ function ChatUI() {
               <div
                 className={`max-w-[70%] break-words p-3 rounded-2xl ${
                   message.type === "user"
-                    ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
-                    : "bg-[var(--secondary)] text-[var(--secondary-foreground)]"
+                    ? "bg-blue-500 text-white" // User messages (Right Side)
+                    : "bg-gray-200 text-black" // AI messages (Left Side)
                 } shadow-sm`}
               >
                 {message.text}
@@ -88,12 +94,12 @@ function ChatUI() {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Type your message..."
-              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
               className="flex-1 rounded-full"
             />
             <Button
               onClick={handleSendMessage}
-              className=" px-6 bg-[var(--primary)] hover:bg-[var(--primary-foreground)]"
+              className="px-6 bg-blue-500 hover:bg-blue-600 text-white"
             >
               Send
             </Button>

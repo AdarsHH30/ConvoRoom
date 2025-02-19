@@ -1,16 +1,14 @@
 from django.shortcuts import render
-import random, json
-import os
+import json, os, uuid
 from dotenv import load_dotenv
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
-import uuid
-from dataBase import *
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 from django.http import JsonResponse
-from .models import ChatRoom
 
 load_dotenv()
 API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -23,9 +21,27 @@ conversation = ConversationChain(llm=chat, memory=memory, verbose=False)
 @api_view(["POST"])
 def getReactData(request):
     data = json.loads(request.body)
-    input_text = data.get("message")
-    response = conversation.predict(input=input_text)
-    return Response({"Response": response})
+    user_message = data.get("message")
+    room_id = data.get("roomId")  # Get the chat room ID
+
+    if not user_message or not room_id:
+        return Response({"error": "Invalid request"}, status=400)
+
+    # Get AI response
+    ai_response = conversation.predict(input=user_message)
+
+    # Send response to all WebSocket clients in the room
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f"chat_{room_id}",
+        {
+            "type": "chat_message",
+            "message": ai_response,
+            "username": "AI",
+        },
+    )
+
+    return Response({"response": ai_response})
 
 
 @api_view(["GET"])
