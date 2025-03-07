@@ -12,8 +12,7 @@ from django.http import JsonResponse
 
 load_dotenv()
 API_KEY = os.getenv("GOOGLE_API_KEY")
-
-chat = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=API_KEY)
+chat = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=API_KEY)
 memory = ConversationBufferMemory(return_messages=True)
 conversation = ConversationChain(llm=chat, memory=memory, verbose=False)
 
