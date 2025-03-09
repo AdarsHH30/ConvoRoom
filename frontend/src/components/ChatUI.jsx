@@ -7,62 +7,52 @@ function ChatUI() {
   const [inputText, setInputText] = useState("");
   const messagesEndRef = useRef(null);
   const roomId = window.location.pathname.split("/").pop();
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const ws = useRef(null);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    ws.current = new WebSocket(`ws://127.0.0.1:8000/ws/room/${roomId}/`);
 
-  useEffect(() => {
-    const savedMessages = localStorage.getItem(`chat_${roomId}`);
-    if (savedMessages) {
-      setMessages(JSON.parse(savedMessages));
-    }
+    ws.current.onopen = () => {
+      console.log("WebSocket Connected");
+    };
+
+    ws.current.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log("Received WebSocket Message:", data);
+
+      if (data.type === "chat_message") {
+        setMessages((prev) => [
+          ...prev,
+          { text: data.message, sender: data.username },
+        ]);
+      }
+    };
+
+    ws.current.onclose = () => {
+      console.log("WebSocket Disconnected");
+    };
+
+    return () => {
+      ws.current.close();
+    };
   }, [roomId]);
 
-  useEffect(() => {
-    localStorage.setItem(`chat_${roomId}`, JSON.stringify(messages));
-  }, [messages, roomId]);
-
-  const handleSendMessage = async () => {
-    if (!inputText.trim()) return;
-
-    const newUserMessage = { type: "user", text: inputText };
-
-    setMessages((prev) => [...prev, newUserMessage]);
-
-    try {
-      const response = await fetch("http://localhost:8000/api/data/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: inputText, roomId }),
-      });
-
-      const data = await response.json();
-
-      const botResponse = { type: "bot", text: data.response || "No response" };
-
-      setMessages((prev) => [...prev, botResponse]);
-    } catch (error) {
-      console.error("Error:", error);
-      setMessages((prev) => [
-        ...prev,
-        { type: "bot", text: "Sorry, I couldn't process your message" },
-      ]);
-    }
-
+  const handleSendMessage = () => {
+    if (!inputText.trim() || !ws.current) return;
+    ws.current.send(JSON.stringify({ message: inputText }));
     setInputText("");
   };
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4 h-[calc(100vh-2rem)] flex flex-col">
       <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col">
         <div className="p-4 border-b bg-[var(--primary)] rounded-t-lg">
           <h2 className="text-xl font-bold text-[var(--background)]">
-            AI Chat
+            Chat Room
           </h2>
         </div>
 
@@ -71,14 +61,14 @@ function ChatUI() {
             <div
               key={index}
               className={`flex ${
-                message.type === "user" ? "justify-end" : "justify-start"
+                message.sender === "User" ? "justify-end" : "justify-start"
               }`}
             >
               <div
                 className={`max-w-[70%] break-words p-3 rounded-2xl ${
-                  message.type === "user"
-                    ? "bg-blue-500 text-white" // User messages (Right Side)
-                    : "bg-gray-200 text-black" // AI messages (Left Side)
+                  message.sender === "User"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 text-black"
                 } shadow-sm`}
               >
                 {message.text}

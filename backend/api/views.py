@@ -19,28 +19,39 @@ conversation = ConversationChain(llm=chat, memory=memory, verbose=False)
 
 @api_view(["POST"])
 def getReactData(request):
-    data = json.loads(request.body)
-    user_message = data.get("message")
-    room_id = data.get("roomId")  # Get the chat room ID
+    try:
+        data = json.loads(request.body.decode("utf-8"))  # Ensure UTF-8 decoding
+        user_message = data.get("message", "").strip()
+        room_id = data.get("roomId", "").strip()
 
-    if not user_message or not room_id:
-        return Response({"error": "Invalid request"}, status=400)
+        if not user_message or not room_id:
+            return Response(
+                {"error": "Invalid request - Missing 'message' or 'roomId'"}, status=400
+            )
 
-    # Get AI response
-    ai_response = conversation.predict(input=user_message)
+        # Get AI response (Ensure `conversation` is correctly imported)
+        ai_response = conversation.predict(input=user_message)
+        print(f"AI Response: {ai_response}")  # Debugging
 
-    # Send response to all WebSocket clients in the room
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        f"chat_{room_id}",
-        {
-            "type": "chat_message",
-            "message": ai_response,
-            "username": "AI",
-        },
-    )
+        # Send AI response to all WebSocket clients in the room
+        channel_layer = get_channel_layer()
+        print(f"Sending message to room {room_id}: {ai_response}")
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{room_id}",
+            {
+                "type": "chat_message",
+                "message": ai_response,
+                "username": "AI",
+            },
+        )
+        print("Message sent to WebSocket group")
 
-    return Response({"response": ai_response})
+        return Response({"response": ai_response}, status=200)
+
+    except json.JSONDecodeError:
+        return Response({"error": "Invalid JSON format"}, status=400)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
 
 
 @api_view(["GET"])
