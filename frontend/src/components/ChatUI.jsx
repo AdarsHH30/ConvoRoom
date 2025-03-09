@@ -37,10 +37,30 @@ function ChatUI() {
     };
   }, [roomId]);
 
-  const handleSendMessage = () => {
-    if (!inputText.trim() || !ws.current) return;
-    ws.current.send(JSON.stringify({ message: inputText }));
+  const handleSendMessage = async () => {
+    if (!inputText.trim()) return;
+
+    const userMessage = { text: inputText, sender: "User" };
+    setMessages((prev) => [...prev, userMessage]);
     setInputText("");
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/data/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: inputText, roomId }),
+      });
+
+      const responseData = await response.json();
+      if (response.ok && responseData.response) {
+        const aiMessage = { text: responseData.response, sender: "AI" };
+        setMessages((prev) => [...prev, aiMessage]);
+      } else {
+        console.error("Error fetching AI response:", responseData.error);
+      }
+    } catch (error) {
+      console.error("Failed to send message:", error);
+    }
   };
 
   useEffect(() => {

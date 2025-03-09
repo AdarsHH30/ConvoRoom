@@ -19,6 +19,7 @@ conversation = ConversationChain(llm=chat, memory=memory, verbose=False)
 
 @api_view(["POST"])
 def getReactData(request):
+    print("we are inside getReactData")
     try:
         data = json.loads(request.body.decode("utf-8"))  # Ensure UTF-8 decoding
         user_message = data.get("message", "").strip()
@@ -37,7 +38,7 @@ def getReactData(request):
         channel_layer = get_channel_layer()
         print(f"Sending message to room {room_id}: {ai_response}")
         async_to_sync(channel_layer.group_send)(
-            f"chat_{room_id}",
+            f"room_{room_id}",
             {
                 "type": "chat_message",
                 "message": ai_response,
