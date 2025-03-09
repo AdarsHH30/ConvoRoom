@@ -30,6 +30,15 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 # CORS_ALLOWED_ORIGINS = ["http://localhost:5173/"]
+DATABASES = {
+    "default": {
+        "ENGINE": "djongo",  # Use djongo if you want Django models with MongoDB
+        "NAME": "convo_room",  # Your MongoDB database name
+        "CLIENT": {
+            "host": "mongodb://localhost:27017/",
+        },
+    }
+}
 
 
 # Application definition
@@ -37,6 +46,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     "daphne",  # Needed for ASGI
     "channels",
+    "corsheaders",  # Add this for CORS support
     "api",  # Your Django app
     "django.contrib.admin",
     "django.contrib.auth",
@@ -45,6 +55,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 ]
+
 
 # ASGI Setup
 ASGI_APPLICATION = "backend.asgi.application"
@@ -58,6 +69,7 @@ CHANNEL_LAYERS = {
 
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",  # Move this to the top
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -65,8 +77,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
 ]
+
 CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = "backend.urls"

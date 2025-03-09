@@ -12,7 +12,33 @@ function ChatUI() {
   const messageTracker = useRef(new Set());
   const roomId = window.location.pathname.split("/").pop();
 
-  // Memoized WebSocket message handler
+  useEffect(() => {
+    const fetchChatHistory = async () => {
+      try {
+        const response = await fetch(
+          `http://127.0.0.1:8000/api/get_chat_history/${roomId}/`
+        );
+        if (!response.ok) throw new Error("Failed to fetch chat history");
+
+        const data = await response.json();
+        console.log("Fetched Messages:", data.messages);
+
+        const formattedMessages = data.messages.map((msg) => ({
+          id: `${msg.sender}-${msg.timestamp}`,
+          sender: msg.sender,
+          text: msg.message,
+          timestamp: msg.timestamp,
+        }));
+
+        setMessages(formattedMessages);
+      } catch (error) {
+        console.error("Error fetching chat history:", error);
+      }
+    };
+
+    fetchChatHistory();
+  }, [roomId]);
+
   const handleWebSocketMessage = useCallback((event) => {
     try {
       const data = JSON.parse(event.data);
@@ -20,15 +46,14 @@ function ChatUI() {
 
       const contentId = `${data.username}-${data.message}`;
       if (messageTracker.current.has(contentId)) return;
-
       messageTracker.current.add(contentId);
+
       setMessages((prev) => [
         ...prev,
         {
-          text: data.message,
-          sender: data.username,
           id: `${contentId}-${Date.now()}`,
-          contentId,
+          sender: data.username,
+          text: data.message,
           timestamp: new Date().toISOString(),
         },
       ]);
@@ -37,50 +62,32 @@ function ChatUI() {
     }
   }, []);
 
-  // WebSocket setup with better error handling
+  // WebSocket Connection
   useEffect(() => {
     const ws = new WebSocket(`ws://127.0.0.1:8000/ws/room/${roomId}/`);
     wsRef.current = ws;
 
-    ws.onopen = () => {
-      setIsConnected(true);
-      console.log("WebSocket Connected");
-    };
-
+    ws.onopen = () => setIsConnected(true);
     ws.onmessage = handleWebSocketMessage;
+    ws.onerror = () => setIsConnected(false);
+    ws.onclose = () => setIsConnected(false);
 
-    ws.onerror = (error) => {
-      console.error("WebSocket Error:", error);
-      setIsConnected(false);
-    };
-
-    ws.onclose = () => {
-      setIsConnected(false);
-      console.log("WebSocket Disconnected");
-    };
-
-    return () => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.close(1000, "Component unmounted");
-      }
-    };
+    return () => ws.close(1000, "Component unmounted");
   }, [roomId, handleWebSocketMessage]);
 
-  // Optimized message sending
+  // Send Message
   const sendMessage = useCallback(async () => {
     if (!inputText.trim() || isSending || !isConnected) return;
-
     setIsSending(true);
+
     const contentId = `User-${inputText}`;
     const messageData = {
-      text: inputText,
-      sender: "User",
       id: `${contentId}-${Date.now()}`,
-      contentId,
+      sender: "User",
+      text: inputText,
       timestamp: new Date().toISOString(),
     };
 
-    // Optimistic update
     if (!messageTracker.current.has(contentId)) {
       messageTracker.current.add(contentId);
       setMessages((prev) => [...prev, messageData]);
@@ -90,23 +97,13 @@ function ChatUI() {
     setInputText("");
 
     try {
-      // WebSocket send
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(
-          JSON.stringify({
-            type: "chat_message",
-            message: messageToSend,
-            roomId,
-          })
-        );
-      }
+      wsRef.current?.send(
+        JSON.stringify({ type: "chat_message", message: messageToSend, roomId })
+      );
 
-      // API call
       const response = await fetch("http://127.0.0.1:8000/api/data/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: messageToSend, roomId }),
       });
 
@@ -120,10 +117,9 @@ function ChatUI() {
           setMessages((prev) => [
             ...prev,
             {
-              text: aiResponse,
-              sender: "AI",
               id: `${aiContentId}-${Date.now()}`,
-              contentId: aiContentId,
+              sender: "AI",
+              text: aiResponse,
               timestamp: new Date().toISOString(),
             },
           ]);
@@ -131,14 +127,13 @@ function ChatUI() {
       }
     } catch (error) {
       console.error("Message sending failed:", error);
-      // Optionally remove optimistic update on failure
-      setMessages((prev) => prev.filter((msg) => msg.contentId !== contentId));
+      setMessages((prev) => prev.filter((msg) => msg.id !== contentId));
     } finally {
       setIsSending(false);
     }
   }, [inputText, isSending, isConnected, roomId]);
 
-  // Auto-scroll with throttling
+  // Auto-scroll to the latest message
   useEffect(() => {
     const timeout = setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -162,6 +157,7 @@ function ChatUI() {
           </span>
         </div>
 
+        {/* Chat Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((message) => (
             <div
@@ -187,6 +183,7 @@ function ChatUI() {
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Input Box */}
         <div className="p-4 border-t bg-[var(--background)]">
           <div className="flex gap-2">
             <Input

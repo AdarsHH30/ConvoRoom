@@ -1,5 +1,8 @@
 from django.shortcuts import render
-import json, os, uuid
+from django.http import JsonResponse
+import json
+import os
+import uuid
 from dotenv import load_dotenv
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -8,51 +11,75 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from django.http import JsonResponse
+from pymongo import MongoClient
+from datetime import datetime
 
 load_dotenv()
 API_KEY = os.getenv("GOOGLE_API_KEY")
+
 chat = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=API_KEY)
 memory = ConversationBufferMemory(return_messages=True)
 conversation = ConversationChain(llm=chat, memory=memory, verbose=False)
 
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+client = MongoClient(MONGO_URI)
+db = client["convo_room"]
+messages_collection = db["messages"]
+
 
 @api_view(["POST"])
 def getReactData(request):
-    print("we are inside getReactData")
     try:
-        data = json.loads(request.body.decode("utf-8"))  # Ensure UTF-8 decoding
+        data = json.loads(request.body.decode("utf-8"))
         user_message = data.get("message", "").strip()
         room_id = data.get("roomId", "").strip()
 
         if not user_message or not room_id:
-            return Response(
-                {"error": "Invalid request - Missing 'message' or 'roomId'"}, status=400
-            )
+            return Response({"error": "Invalid request"}, status=400)
 
-        # Get AI response (Ensure `conversation` is correctly imported)
         ai_response = conversation.predict(input=user_message)
-        print(f"AI Response: {ai_response}")  # Debugging
 
-        # Send AI response to all WebSocket clients in the room
+        collection = db["messages"]
+        collection.insert_one(
+            {
+                "room_id": room_id,
+                "sender": "User",
+                "message": user_message,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
+
+        collection.insert_one(
+            {
+                "room_id": room_id,
+                "sender": "AI",
+                "message": ai_response,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
+
         channel_layer = get_channel_layer()
-        print(f"Sending message to room {room_id}: {ai_response}")
         async_to_sync(channel_layer.group_send)(
             f"room_{room_id}",
-            {
-                "type": "chat_message",
-                "message": ai_response,
-                "username": "AI",
-            },
+            {"type": "chat_message", "message": ai_response, "username": "AI"},
         )
-        print("Message sent to WebSocket group")
 
         return Response({"response": ai_response}, status=200)
 
-    except json.JSONDecodeError:
-        return Response({"error": "Invalid JSON format"}, status=400)
     except Exception as e:
         return Response({"error": str(e)}, status=500)
+
+
+@api_view(["GET"])
+def get_chat_history(request, room_id):
+    try:
+        chat_history = list(
+            messages_collection.find({"room_id": room_id}, {"_id": 0}).sort("timestamp")
+        )
+        print(chat_history)
+        return JsonResponse({"messages": chat_history}, safe=False)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 @api_view(["GET"])
@@ -77,12 +104,18 @@ def join_room(request):
         if rooms[room_id]["participants"] < rooms[room_id]["max_participants"]:
             rooms[room_id]["participants"] += 1
             return Response({"message": "Joined room successfully"})
+        else:
+            return Response({"error": "Room is full"}, status=403)
     else:
         return Response({"error": "Room not found or does not exist"}, status=404)
 
 
+@api_view(["POST"])
 def insert_data(request):
-    collection = db["mycollection"]
-    data = {"message": "Hello MongoDB"}
-    collection.insert_one(data)
-    return JsonResponse({"status": "Data Inserted"})
+    try:
+        collection = db["mycollection"]
+        data = {"message": "Hello MongoDB"}
+        collection.insert_one(data)
+        return JsonResponse({"status": "Data Inserted"})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
