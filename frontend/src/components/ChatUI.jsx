@@ -1,178 +1,186 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 
 function ChatUI() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
+  const [isConnected, setIsConnected] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef(null);
-  const roomId = window.location.pathname.split("/").pop();
   const wsRef = useRef(null);
   const messageTracker = useRef(new Set());
-  const processingMessage = useRef(false);
+  const roomId = window.location.pathname.split("/").pop();
 
+  // Memoized WebSocket message handler
+  const handleWebSocketMessage = useCallback((event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data.type !== "chat_message") return;
+
+      const contentId = `${data.username}-${data.message}`;
+      if (messageTracker.current.has(contentId)) return;
+
+      messageTracker.current.add(contentId);
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: data.message,
+          sender: data.username,
+          id: `${contentId}-${Date.now()}`,
+          contentId,
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+    } catch (error) {
+      console.error("WebSocket message parsing error:", error);
+    }
+  }, []);
+
+  // WebSocket setup with better error handling
   useEffect(() => {
-    // Create WebSocket connection
-    wsRef.current = new WebSocket(`ws://127.0.0.1:8000/ws/room/${roomId}/`);
+    const ws = new WebSocket(`ws://127.0.0.1:8000/ws/room/${roomId}/`);
+    wsRef.current = ws;
 
-    wsRef.current.onopen = () => {
+    ws.onopen = () => {
+      setIsConnected(true);
       console.log("WebSocket Connected");
     };
 
-    wsRef.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log("Received WebSocket Message:", data);
+    ws.onmessage = handleWebSocketMessage;
 
-      if (data.type === "chat_message") {
-        // Create a content-based message identifier (ignoring timestamp)
-        const contentId = `${data.username}-${data.message}`;
-
-        // Only add the message if we haven't seen this content before
-        if (!messageTracker.current.has(contentId)) {
-          messageTracker.current.add(contentId);
-
-          // Use a functional update to ensure we're working with the latest state
-          setMessages((prevMessages) => {
-            // Double-check that we don't already have this message in state
-            if (!prevMessages.some((msg) => msg.contentId === contentId)) {
-              return [
-                ...prevMessages,
-                {
-                  text: data.message,
-                  sender: data.username,
-                  id: `${contentId}-${Date.now()}`,
-                  contentId,
-                },
-              ];
-            }
-            return prevMessages;
-          });
-        }
-      }
+    ws.onerror = (error) => {
+      console.error("WebSocket Error:", error);
+      setIsConnected(false);
     };
 
-    wsRef.current.onclose = () => {
+    ws.onclose = () => {
+      setIsConnected(false);
       console.log("WebSocket Disconnected");
     };
 
-    // Cleanup function to close WebSocket connection
     return () => {
-      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.close();
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close(1000, "Component unmounted");
       }
     };
-  }, [roomId]);
+  }, [roomId, handleWebSocketMessage]);
 
-  const handleSendMessage = async () => {
-    if (!inputText.trim() || processingMessage.current) return;
+  // Optimized message sending
+  const sendMessage = useCallback(async () => {
+    if (!inputText.trim() || isSending || !isConnected) return;
 
-    processingMessage.current = true;
-
+    setIsSending(true);
     const contentId = `User-${inputText}`;
+    const messageData = {
+      text: inputText,
+      sender: "User",
+      id: `${contentId}-${Date.now()}`,
+      contentId,
+      timestamp: new Date().toISOString(),
+    };
 
-    // Only add the message if we haven't seen it before
+    // Optimistic update
     if (!messageTracker.current.has(contentId)) {
       messageTracker.current.add(contentId);
-      const userMessage = {
-        text: inputText,
-        sender: "User",
-        id: `${contentId}-${Date.now()}`,
-        contentId,
-      };
-
-      setMessages((prevMessages) => {
-        // Double-check we don't already have this message
-        if (!prevMessages.some((msg) => msg.contentId === contentId)) {
-          return [...prevMessages, userMessage];
-        }
-        return prevMessages;
-      });
+      setMessages((prev) => [...prev, messageData]);
     }
 
-    const currentInputText = inputText;
+    const messageToSend = inputText;
     setInputText("");
 
-    // Send message through WebSocket if connected
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(
-        JSON.stringify({
-          type: "chat_message",
-          message: currentInputText,
-          roomId: roomId,
-        })
-      );
-    }
-
     try {
+      // WebSocket send
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(
+          JSON.stringify({
+            type: "chat_message",
+            message: messageToSend,
+            roomId,
+          })
+        );
+      }
+
+      // API call
       const response = await fetch("http://127.0.0.1:8000/api/data/", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: currentInputText, roomId }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: messageToSend, roomId }),
       });
 
-      const responseData = await response.json();
-      if (response.ok && responseData.response) {
-        const aiContentId = `AI-${responseData.response}`;
+      if (!response.ok) throw new Error("API response not OK");
 
-        // Only add AI response if we haven't seen it before
+      const { response: aiResponse } = await response.json();
+      if (aiResponse) {
+        const aiContentId = `AI-${aiResponse}`;
         if (!messageTracker.current.has(aiContentId)) {
           messageTracker.current.add(aiContentId);
-
-          setMessages((prevMessages) => {
-            // Double-check we don't already have this message
-            if (!prevMessages.some((msg) => msg.contentId === aiContentId)) {
-              return [
-                ...prevMessages,
-                {
-                  text: responseData.response,
-                  sender: "AI",
-                  id: `${aiContentId}-${Date.now()}`,
-                  contentId: aiContentId,
-                },
-              ];
-            }
-            return prevMessages;
-          });
+          setMessages((prev) => [
+            ...prev,
+            {
+              text: aiResponse,
+              sender: "AI",
+              id: `${aiContentId}-${Date.now()}`,
+              contentId: aiContentId,
+              timestamp: new Date().toISOString(),
+            },
+          ]);
         }
-      } else {
-        console.error("Error fetching AI response:", responseData.error);
       }
     } catch (error) {
-      console.error("Failed to send message:", error);
+      console.error("Message sending failed:", error);
+      // Optionally remove optimistic update on failure
+      setMessages((prev) => prev.filter((msg) => msg.contentId !== contentId));
     } finally {
-      processingMessage.current = false;
+      setIsSending(false);
     }
-  };
+  }, [inputText, isSending, isConnected, roomId]);
 
+  // Auto-scroll with throttling
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const timeout = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+    return () => clearTimeout(timeout);
   }, [messages]);
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4 h-[calc(100vh-2rem)] flex flex-col">
       <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col">
-        <div className="p-4 border-b bg-[var(--primary)] rounded-t-lg">
+        <div className="p-4 border-b bg-[var(--primary)] rounded-t-lg flex justify-between items-center">
           <h2 className="text-xl font-bold text-[var(--background)]">
             Chat Room
           </h2>
+          <span
+            className={`text-sm ${
+              isConnected ? "text-green-500" : "text-red-500"
+            }`}
+          >
+            {isConnected ? "Connected" : "Disconnected"}
+          </span>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${
+              className={`flex items-end ${
                 message.sender === "User" ? "justify-end" : "justify-start"
               }`}
             >
               <div
-                className={`max-w-[70%] break-words p-3 rounded-2xl ${
+                className={`max-w-[70%] p-3 rounded-2xl ${
                   message.sender === "User"
                     ? "bg-blue-500 text-white"
                     : "bg-gray-200 text-black"
                 } shadow-sm`}
               >
-                {message.text}
+                <p className="break-words">{message.text}</p>
+                <span className="text-xs opacity-70">
+                  {new Date(message.timestamp).toLocaleTimeString()}
+                </span>
               </div>
             </div>
           ))}
@@ -185,20 +193,16 @@ function ChatUI() {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Type your message..."
-              onKeyDown={(e) =>
-                e.key === "Enter" &&
-                !processingMessage.current &&
-                handleSendMessage()
-              }
+              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
               className="flex-1 rounded-full"
-              disabled={processingMessage.current}
+              disabled={isSending || !isConnected}
             />
             <Button
-              onClick={handleSendMessage}
+              onClick={sendMessage}
               className="px-6 bg-blue-500 hover:bg-blue-600 text-white"
-              disabled={processingMessage.current}
+              disabled={isSending || !isConnected}
             >
-              Send
+              {isSending ? "Sending..." : "Send"}
             </Button>
           </div>
         </div>
