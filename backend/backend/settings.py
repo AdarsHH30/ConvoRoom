@@ -23,11 +23,11 @@ import dotenv
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = dotenv.get_key(BASE_DIR / ".env", "PRODUCTION_KEY")
-
+CORS_ALLOW_ORIGINS = ["https://convo-room-ai.vercel.app/"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 # CORS_ALLOWED_ORIGINS = ["http://localhost:5173/"]
 DATABASES = {
