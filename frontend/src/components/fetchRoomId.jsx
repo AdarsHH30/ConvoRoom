@@ -13,7 +13,7 @@ const FetchRoomId = () => {
       setIsLoading(true);
       try {
         const response = await fetch(
-          "http://localhost:8000/api/generateRoomId/"
+          "http://localhost:7680/api/generateRoomId/"
         );
         if (!response.ok) {
           throw new Error("Failed to fetch room ID");

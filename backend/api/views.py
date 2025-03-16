@@ -26,6 +26,11 @@ client = MongoClient(MONGO_URI)
 db = client["convo_room"]
 messages_collection = db["messages"]
 
+ai_response = conversation.predict(
+    input="for every converstaion from now give me a more short and correct answer"
+)
+print(ai_response)
+
 
 @api_view(["POST"])
 def getReactData(request):

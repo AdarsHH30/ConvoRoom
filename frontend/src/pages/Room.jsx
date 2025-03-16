@@ -1,10 +1,13 @@
 import React from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import "../css/Room.css";
 import FetchRoomId from "../components/fetchRoomId";
 import ChatUI from "../components/ChatUI";
+import { ArrowBigLeft, PersonStanding } from "lucide-react";
 
 const Room = () => {
   const { roomId } = useParams();
+  const navigate = useNavigate();
 
   const handleCopyInvite = () => {
     navigator.clipboard
@@ -19,38 +22,15 @@ const Room = () => {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <button
-          onClick={handleCopyInvite}
-          style={{
-            padding: "8px 20px",
-            backgroundColor: "#ffffff",
-            color: "#333333",
-            border: "1px solid #e0e0e0",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontSize: "14px",
-            fontWeight: "500",
-            transition: "all 0.2s ease",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-            outline: "none",
-          }}
-          onMouseOver={(e) => {
-            e.target.style.backgroundColor = "#f5f5f5";
-            e.target.style.boxShadow = "0 4px 8px rgba(0,0,0,0.1)";
-          }}
-          onMouseOut={(e) => {
-            e.target.style.backgroundColor = "#ffffff";
-            e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.05)";
-          }}
-          onMouseDown={(e) => {
-            e.target.style.transform = "translateY(1px)";
-          }}
-          onMouseUp={(e) => {
-            e.target.style.transform = "translateY(0)";
-          }}
-        >
-          Invite
+      <div className="button-container">
+        <button onClick={() => navigate("/")} className="button">
+          <ArrowBigLeft size={24} />
+        </button>
+        <button onClick={handleCopyInvite} className="button">
+          <span style={{ display: "inline-flex", alignItems: "center" }}>
+            <PersonStanding size={15} />
+            Invite
+          </span>
         </button>
       </div>
       <ChatUI roomId={roomId} />

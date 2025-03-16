@@ -17,7 +17,7 @@ function ChatUI() {
     const fetchChatHistory = async () => {
       try {
         const response = await fetch(
-          `http://127.0.0.1:8000/api/get_chat_history/${roomId}/`
+          `http://127.0.0.1:7680/api/get_chat_history/${roomId}/`
         );
         if (!response.ok) throw new Error("Failed to fetch chat history");
 
@@ -65,7 +65,7 @@ function ChatUI() {
 
   // WebSocket Connection
   useEffect(() => {
-    const ws = new WebSocket(`ws://127.0.0.1:8000/ws/room/${roomId}/`);
+    const ws = new WebSocket(`ws://127.0.0.1:7680/ws/room/${roomId}/`);
     wsRef.current = ws;
 
     ws.onopen = () => setIsConnected(true);
@@ -102,7 +102,7 @@ function ChatUI() {
         JSON.stringify({ type: "chat_message", message: messageToSend, roomId })
       );
 
-      const response = await fetch("http://127.0.0.1:8000/api/data/", {
+      const response = await fetch("http://127.0.0.1:7680/api/data/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: messageToSend, roomId }),
@@ -191,7 +191,7 @@ function ChatUI() {
                   <div
                     className={`max-w-[70%] p-2.5 rounded-2xl ${
                       message.sender === "User"
-                        ? "bg-blue-500 text-white"
+                        ? "bg-green-800 text-white"
                         : "bg-gray-100 text-black"
                     } shadow-sm`}
                   >
