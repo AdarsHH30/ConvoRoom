@@ -1,6 +1,9 @@
+"use client";
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
+import { CodeBlock } from "@/components/ui/code-block";
 
 function ChatUI() {
   const [messages, setMessages] = useState([]);
@@ -17,7 +20,7 @@ function ChatUI() {
     const fetchChatHistory = async () => {
       try {
         const response = await fetch(
-          `http://127.0.0.1:7680/api/get_chat_history/${roomId}/`
+          `http://127.0.0.1:8000/api/get_chat_history/${roomId}/`
         );
         if (!response.ok) throw new Error("Failed to fetch chat history");
 
@@ -29,6 +32,11 @@ function ChatUI() {
           sender: msg.sender,
           text: msg.message,
           timestamp: msg.timestamp,
+          isCode:
+            msg.sender === "AI" &&
+            msg.message.startsWith("```") &&
+            msg.message.endsWith("```"),
+          language: msg.sender === "AI" ? extractLanguage(msg.message) : null,
         }));
 
         setMessages(formattedMessages);
@@ -39,6 +47,12 @@ function ChatUI() {
 
     fetchChatHistory();
   }, [roomId]);
+
+  const extractLanguage = (text) => {
+    if (!text.startsWith("```")) return null;
+    const firstLine = text.split("\n")[0];
+    return firstLine.slice(3).trim() || null;
+  };
 
   const handleWebSocketMessage = useCallback((event) => {
     try {
@@ -56,6 +70,12 @@ function ChatUI() {
           sender: data.username,
           text: data.message,
           timestamp: new Date().toISOString(),
+          isCode:
+            data.username === "AI" &&
+            data.message.startsWith("```") &&
+            data.message.endsWith("```"),
+          language:
+            data.username === "AI" ? extractLanguage(data.message) : null,
         },
       ]);
     } catch (error) {
@@ -63,9 +83,8 @@ function ChatUI() {
     }
   }, []);
 
-  // WebSocket Connection
   useEffect(() => {
-    const ws = new WebSocket(`ws://127.0.0.1:7680/ws/room/${roomId}/`);
+    const ws = new WebSocket(`ws://127.0.0.1:8000/ws/room/${roomId}/`);
     wsRef.current = ws;
 
     ws.onopen = () => setIsConnected(true);
@@ -76,7 +95,6 @@ function ChatUI() {
     return () => ws.close(1000, "Component unmounted");
   }, [roomId, handleWebSocketMessage]);
 
-  // Send Message
   const sendMessage = useCallback(async () => {
     if (!inputText.trim() || isSending || !isConnected) return;
     setIsSending(true);
@@ -87,6 +105,7 @@ function ChatUI() {
       sender: "User",
       text: inputText,
       timestamp: new Date().toISOString(),
+      isCode: false,
     };
 
     if (!messageTracker.current.has(contentId)) {
@@ -102,7 +121,7 @@ function ChatUI() {
         JSON.stringify({ type: "chat_message", message: messageToSend, roomId })
       );
 
-      const response = await fetch("http://127.0.0.1:7680/api/data/", {
+      const response = await fetch("http://127.0.0.1:8000/api/data/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: messageToSend, roomId }),
@@ -110,7 +129,8 @@ function ChatUI() {
 
       if (!response.ok) throw new Error("API response not OK");
 
-      const { response: aiResponse } = await response.json();
+      const data = await response.json();
+      const aiResponse = data?.response;
       if (aiResponse) {
         const aiContentId = `AI-${aiResponse}`;
         if (!messageTracker.current.has(aiContentId)) {
@@ -122,6 +142,9 @@ function ChatUI() {
               sender: "AI",
               text: aiResponse,
               timestamp: new Date().toISOString(),
+              isCode:
+                aiResponse.startsWith("```") && aiResponse.endsWith("```"),
+              language: extractLanguage(aiResponse),
             },
           ]);
         }
@@ -134,16 +157,19 @@ function ChatUI() {
     }
   }, [inputText, isSending, isConnected, roomId]);
 
-  // Scroll to bottom when new messages arrive
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
-  // Scroll to bottom button function
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const copyToClipboard = (text) => {
+    const cleanedText = text.replace(/^```[\w]*\n|\n```$/g, "");
+    navigator.clipboard.writeText(cleanedText);
   };
 
   return (
@@ -164,7 +190,6 @@ function ChatUI() {
           </span>
         </div>
 
-        {/* Chat Messages - Fixed height container with guaranteed scrolling */}
         <div
           ref={chatContainerRef}
           style={{
@@ -191,11 +216,33 @@ function ChatUI() {
                   <div
                     className={`max-w-[70%] p-2.5 rounded-2xl ${
                       message.sender === "User"
-                        ? "bg-green-800 text-white"
-                        : "bg-gray-100 text-black"
+                        ? "bg-green-800 text-white ml-auto"
+                        : message.isCode
+                        ? "bg-gray-800 text-white font-mono relative mr-auto"
+                        : "bg-gray-100 text-black mr-auto"
                     } shadow-sm`}
                   >
-                    <p className="break-words text-sm">{message.text}</p>
+                    {message.isCode ? (
+                      <CodeBlock
+                        language={message.language || "jsx"}
+                        filename={`${message.language || "jsx"}`}
+                        code={message.text.replace(/^```[\w]*\n|\n```$/g, "")}
+                      />
+                    ) : (
+                      <pre className="break-words text-sm whitespace-pre-wrap">
+                        {message.text}
+                      </pre>
+                    )}
+
+                    {/* {message.isCode ? (
+                      <CodeBlock
+                        language={message.language || "jsx"}
+                        filename={`${message.language || "jsx"}`}
+                        code={message.text.replace(/^```[\w]*\n|\n```$/g, "")}
+                      />
+                    ) : (
+                      <pre className="break-words text-sm">{message.text}</pre>
+                    )} */}
                     <span className="text-xs opacity-70 mt-1 inline-block">
                       {new Date(message.timestamp).toLocaleTimeString([], {
                         hour: "2-digit",
@@ -210,7 +257,6 @@ function ChatUI() {
           </div>
         </div>
 
-        {/* Floating scroll to bottom button */}
         <button
           onClick={scrollToBottom}
           className="absolute bottom-20 right-8 bg-blue-500 text-white rounded-full p-2 cursor-pointer shadow-md hover:bg-blue-600 transition-colors"
