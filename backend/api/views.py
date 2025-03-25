@@ -21,9 +21,9 @@ chat = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=API_KEY)
 memory = ConversationBufferMemory(return_messages=True)
 conversation = ConversationChain(llm=chat, memory=memory, verbose=False)
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+MONGO_URI = os.getenv("DATABASE_URL")
 client = MongoClient(MONGO_URI)
-db = client["convo_room"]
+db = client["convoroom"]
 messages_collection = db["messages"]
 
 ai_response = conversation.predict(
@@ -45,6 +45,9 @@ def getReactData(request):
         ai_response = conversation.predict(input=user_message)
 
         collection = db["messages"]
+        print("room_id", room_id)
+        print("user_message", user_message)
+        print("ai_response", ai_response)
         collection.insert_one(
             {
                 "room_id": room_id,

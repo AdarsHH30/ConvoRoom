@@ -22,7 +22,7 @@ function Home() {
 
   // Create Room
   const createRoom = () => {
-    fetch("http://127.0.0.1:8000/api/create_room/", {
+    fetch("http://127.0.0.1:9999/api/create_room/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -51,7 +51,7 @@ function Home() {
     }
     setErrorMessage("");
 
-    fetch("http://127.0.0.1:8000/api/join_room/", {
+    fetch("http://127.0.0.1:9999/api/join_room/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

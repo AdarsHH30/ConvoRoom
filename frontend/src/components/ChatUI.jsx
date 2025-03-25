@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
 import { CodeBlock } from "@/components/ui/code-block";
-
+import { PlaceholdersAndVanishInput } from "../components/ui/placeholders-and-vanish-input";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const VITE_WS_API = import.meta.env.VITE_WS_API;
 function ChatUI() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
@@ -20,7 +20,7 @@ function ChatUI() {
     const fetchChatHistory = async () => {
       try {
         const response = await fetch(
-          `http://127.0.0.1:8000/api/get_chat_history/${roomId}/`
+          `${BACKEND_URL}api/get_chat_history/${roomId}/`
         );
         if (!response.ok) throw new Error("Failed to fetch chat history");
 
@@ -84,8 +84,9 @@ function ChatUI() {
   }, []);
 
   useEffect(() => {
-    const ws = new WebSocket(`ws://127.0.0.1:8000/ws/room/${roomId}/`);
-    wsRef.current = ws;
+    const ws = new WebSocket(`${VITE_WS_API}/ws/room/${roomId}/`);
+    //cjdspjjt-9999.inc1.devtunnels.ms/
+    https: wsRef.current = ws;
 
     ws.onopen = () => setIsConnected(true);
     ws.onmessage = handleWebSocketMessage;
@@ -121,7 +122,7 @@ function ChatUI() {
         JSON.stringify({ type: "chat_message", message: messageToSend, roomId })
       );
 
-      const response = await fetch("http://127.0.0.1:8000/api/data/", {
+      const response = await fetch(`${BACKEND_URL}api/data/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: messageToSend, roomId }),
@@ -176,9 +177,7 @@ function ChatUI() {
     <div className="w-full max-w-3xl mx-auto p-4 h-[90vh] flex flex-col">
       <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col border overflow-hidden">
         <div className="p-3 border-b bg-[var(--primary)] rounded-t-lg flex justify-between items-center">
-          <h2 className="text-lg font-bold text-[var(--background)]">
-            Chat Room
-          </h2>
+          <h2 className="text-lg font-bold text-[var(--background)]">Chat</h2>
           <span
             className={`text-xs px-2 py-1 rounded-full ${
               isConnected
@@ -280,21 +279,14 @@ function ChatUI() {
 
         <div className="p-3 border-t bg-[var(--background)]">
           <div className="flex gap-2 items-center">
-            <Input
+            <PlaceholdersAndVanishInput
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Type your message..."
-              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+              // placeholder="Type your message..."
+              onSubmit={sendMessage}
               className="flex-1 rounded-full text-sm h-10"
               disabled={isSending || !isConnected}
             />
-            <Button
-              onClick={sendMessage}
-              className="px-4 py-2 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-full"
-              disabled={isSending || !isConnected}
-            >
-              {isSending ? "..." : "Send"}
-            </Button>
           </div>
         </div>
       </div>
