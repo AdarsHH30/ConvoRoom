@@ -5,6 +5,7 @@ import { CodeBlock } from "@/components/ui/code-block";
 import { PlaceholdersAndVanishInput } from "../components/ui/placeholders-and-vanish-input";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const VITE_WS_API = import.meta.env.VITE_WS_API;
+
 function ChatUI() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
@@ -85,7 +86,6 @@ function ChatUI() {
 
   useEffect(() => {
     const ws = new WebSocket(`${VITE_WS_API}/ws/room/${roomId}/`);
-    //cjdspjjt-9999.inc1.devtunnels.ms/
     https: wsRef.current = ws;
 
     ws.onopen = () => setIsConnected(true);

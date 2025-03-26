@@ -10,6 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowRight, Plus } from "lucide-react";
 
@@ -22,7 +24,7 @@ function Home() {
 
   // Create Room
   const createRoom = () => {
-    fetch("http://127.0.0.1:9999/api/create_room/", {
+    fetch(`${BACKEND_URL}api/create_room/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -51,7 +53,7 @@ function Home() {
     }
     setErrorMessage("");
 
-    fetch("http://127.0.0.1:9999/api/join_room/", {
+    fetch(`${BACKEND_URL}api/join_room/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
