@@ -85,7 +85,7 @@ function ChatUI() {
   }, []);
 
   useEffect(() => {
-    const ws = new WebSocket(`${VITE_WS_API}/ws/room/${roomId}/`);
+    const ws = new WebSocket(`${VITE_WS_API}ws/room/${roomId}/`);
     https: wsRef.current = ws;
 
     ws.onopen = () => setIsConnected(true);
