@@ -1,11 +1,13 @@
 #root {
-  align-self: center;
-  display: grid;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  display: flex; /* Change grid to flex */
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100vh; /* Ensure full viewport height */
+  margin: 0;
 }
+
 
 .logo {
   height: 6em;

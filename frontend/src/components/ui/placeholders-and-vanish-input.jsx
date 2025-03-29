@@ -74,7 +74,9 @@ export function PlaceholdersAndVanishInput({
     ctx.fillStyle = "#FFF";
     ctx.fillText(value, 16, 40);
 
-    const imageData = ctx.getImageData(0, 0, 800, 800);
+    const a = canvas.getContext("2d", { willReadFrequently: true });
+    const imageData = a.getImageData(0, 0, 800, 800);
+
     const pixelData = imageData.data;
     const newData = [];
 

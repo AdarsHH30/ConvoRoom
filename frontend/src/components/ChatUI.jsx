@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { CodeBlock } from "@/components/ui/code-block";
 import { PlaceholdersAndVanishInput } from "../components/ui/placeholders-and-vanish-input";
@@ -174,8 +173,9 @@ function ChatUI() {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto p-4 h-[90vh] flex flex-col">
-      <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col border overflow-hidden">
+    <div className="w-full max-w-4xl mx-auto p-4 h-[90vh] flex flex-col">
+      <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col border overflow-hidden w-full">
+        {/* Header */}
         <div className="p-3 border-b bg-[var(--primary)] rounded-t-lg flex justify-between items-center">
           <h2 className="text-lg font-bold text-[var(--background)]">Chat</h2>
           <span
@@ -189,15 +189,10 @@ function ChatUI() {
           </span>
         </div>
 
+        {/* Messages Container */}
         <div
           ref={chatContainerRef}
-          style={{
-            height: "calc(90vh - 140px)",
-            overflow: "auto",
-            display: "flex",
-            flexDirection: "column",
-            padding: "12px",
-          }}
+          className="flex-1 overflow-auto p-3 h-[calc(100%-56px)] w-full"
         >
           <div className="space-y-3 min-h-full">
             {messages.length === 0 ? (
@@ -232,16 +227,6 @@ function ChatUI() {
                         {message.text}
                       </pre>
                     )}
-
-                    {/* {message.isCode ? (
-                      <CodeBlock
-                        language={message.language || "jsx"}
-                        filename={`${message.language || "jsx"}`}
-                        code={message.text.replace(/^```[\w]*\n|\n```$/g, "")}
-                      />
-                    ) : (
-                      <pre className="break-words text-sm">{message.text}</pre>
-                    )} */}
                     <span className="text-xs opacity-70 mt-1 inline-block">
                       {new Date(message.timestamp).toLocaleTimeString([], {
                         hour: "2-digit",
@@ -256,35 +241,14 @@ function ChatUI() {
           </div>
         </div>
 
-        <button
-          onClick={scrollToBottom}
-          className="absolute bottom-20 right-8 bg-blue-500 text-white rounded-full p-2 cursor-pointer shadow-md hover:bg-blue-600 transition-colors"
-          aria-label="Scroll to bottom"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 14l-7 7m0 0l-7-7m7 7V3"
-            />
-          </svg>
-        </button>
-
-        <div className="p-3 border-t bg-[var(--background)]">
+        {/* Input Field */}
+        <div className="p-3 border-t bg-[var(--background)] w-full">
           <div className="flex gap-2 items-center">
             <PlaceholdersAndVanishInput
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              // placeholder="Type your message..."
               onSubmit={sendMessage}
-              className="flex-1 rounded-full text-sm h-10"
+              className="flex-1 rounded-full text-sm h-12 px-4 w-full"
               disabled={isSending || !isConnected}
             />
           </div>

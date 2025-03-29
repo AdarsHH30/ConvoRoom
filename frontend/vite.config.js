@@ -9,5 +9,16 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+    build: {
+      chunksizeWarningLimit: 1000,
+      sourcemap: true,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom'], 
+          },
+        },
+      },
+    },
   },
 });

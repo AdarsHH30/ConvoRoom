@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ModeToggle";
 import { Input } from "@/components/ui/input";
+import { SparklesCore } from "../components/ui/sparkles";
+import { RoboAnimation } from "@/components/robo-animation";
+import { FloatingPaper } from "@/components/floating-paper";
 import {
   Card,
   CardContent,
@@ -81,16 +84,23 @@ function Home() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative p-4 overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500 rounded-full opacity-20 blur-3xl"></div>
-      <div className="absolute bottom-1/4 right-1/3 w-72 h-72 bg-purple-500 rounded-full opacity-20 blur-3xl"></div>
+    // <div className="h-screen w-screen flex items-center justify-center relative p-4 overflow-hidden bg-black text-white">
+    <div className="min-h-screen w-screen flex items-center justify-center px-4 relative overflow-hidden">
+      <SparklesCore
+        id="sparkles"
+        background="black"
+        minSize={0.6}
+        maxSize={1.4}
+        particleDensity={70}
+        particleColor="#FFFFFF"
+        className="absolute inset-0"
+      />
 
       <div className="absolute top-4 right-4 z-10">
         <ModeToggle />
       </div>
 
-      <Card className="w-full max-w-md backdrop-blur-md bg-opacity-70 border border-gray-200 dark:border-gray-700 shadow-xl">
+      <Card className="w-full max-w-lg p-6 backdrop-blur-md bg-opacity-70 border border-gray-200 dark:border-gray-700 shadow-xl">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold">Connect</CardTitle>
           <CardDescription>
@@ -101,44 +111,31 @@ function Home() {
           {!isJoiningRoom ? (
             <div className="grid grid-cols-2 gap-4">
               <Button
-                className="h-28 flex flex-col items-center justify-center gap-2 rounded-xl hover:shadow-lg transition-all duration-300"
+                className="h-24 flex flex-col items-center justify-center gap-2 rounded-xl hover:shadow-lg transition-all duration-300"
                 variant="outline"
                 onClick={createRoom}
               >
-                <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                  <Plus
-                    size={24}
-                    className="text-blue-500 dark:text-blue-300"
-                  />
-                </div>
+                <Plus size={24} className="text-blue-500" />
                 <span className="font-medium">Create Room</span>
               </Button>
               <Button
-                className="h-28 flex flex-col items-center justify-center gap-2 rounded-xl hover:shadow-lg transition-all duration-300"
+                className="h-24 flex flex-col items-center justify-center gap-2 rounded-xl hover:shadow-lg transition-all duration-300"
                 variant="outline"
                 onClick={joinRoom}
               >
-                <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                  <ArrowRight
-                    size={24}
-                    className="text-purple-500 dark:text-purple-300"
-                  />
-                </div>
+                <ArrowRight size={24} className="text-purple-500" />
                 <span className="font-medium">Join Room</span>
               </Button>
             </div>
           ) : (
-            <div className="space-y-4 backdrop-blur-sm p-4 rounded-lg">
-              <h3 className="text-center font-medium mb-4">
-                Enter Room Details
-              </h3>
+            <div className="space-y-4 p-4 rounded-lg">
+              <h3 className="text-center font-medium mb-4">Enter Room ID</h3>
               <div className="flex items-center space-x-2">
                 <Input
                   type="text"
                   placeholder="Enter Room ID"
                   value={roomId}
                   onChange={(e) => setRoomId(e.target.value)}
-                  onKeyPress={handleKeyPress}
                   className="flex-1 h-12 rounded-lg"
                 />
                 <Button
@@ -159,10 +156,7 @@ function Home() {
           )}
 
           {errorMessage && (
-            <Alert
-              variant="destructive"
-              className="mt-4 backdrop-blur-sm bg-opacity-80"
-            >
+            <Alert variant="destructive" className="mt-4">
               <AlertDescription>{errorMessage}</AlertDescription>
             </Alert>
           )}
@@ -171,5 +165,4 @@ function Home() {
     </div>
   );
 }
-
 export default Home;
