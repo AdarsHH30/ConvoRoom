@@ -26,13 +26,13 @@ export function Navbar() {
       ),
       href: "https://www.linkedin.com/in/adarsh30/",
     },
-    // {
-    //   title: "Components",
-    //   icon: (
-    //     <IconNewSection className="h-full w-full text-neutral-500 dark:text-neutral-300" />
-    //   ),
-    //   href: "#",
-    // },
+    {
+      title: "Portfolio",
+      icon: (
+        <IconTerminal2 className="h-full w-full text-neutral-500 dark:text-neutral-300" />
+      ),
+      href: "https://www.adarshhegde.tech/",
+    },
     // {
     //   title: "Changelog",
     //   icon: (
@@ -50,10 +50,9 @@ export function Navbar() {
     },
   ];
   return (
-    <div className="flex items-center justify-center h-[35rem] w-full">
+    <div className="flex items-center justify-center h-[20rem] sm:h-[25rem] md:h-[30rem] lg:h-[35rem] w-full">
       <FloatingDock
-        // only for demo, remove for production
-        mobileClassName="translate-y-20"
+        mobileClassName="translate-y-10 sm:translate-y-15 md:translate-y-20"
         items={links}
       />
     </div>

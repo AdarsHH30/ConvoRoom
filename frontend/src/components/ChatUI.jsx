@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { CodeBlock } from "@/components/ui/code-block";
 import { PlaceholdersAndVanishInput } from "../components/ui/placeholders-and-vanish-input";
+import { Button } from "@/components/ui/button";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const VITE_WS_API = import.meta.env.VITE_WS_API;
 function ChatUI() {
@@ -172,32 +173,41 @@ function ChatUI() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4 h-[90vh] flex flex-col">
+    <div className="w-full max-w-4xl mx-auto p-1 sm:p-2 md:p-4 h-[90vh] flex flex-col">
       <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col border overflow-hidden w-full">
         {/* Header */}
-        <div className="p-3 border-b bg-[var(--primary)] rounded-t-lg flex justify-between items-center">
-          <h2 className="text-lg font-bold text-[var(--background)]">
-            Chat [{roomId}]
-            <br />
-          </h2>
+        <div className="p-2.5 sm:p-3 md:p-4 border-b bg-[var(--primary)] rounded-t-lg flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm sm:text-base md:text-lg font-bold text-[var(--background)] truncate">
+              Chat Room
+            </h2>
+            <span className="text-xs sm:text-sm text-[var(--background)] opacity-75">
+              [{roomId}]
+            </span>
+          </div>
           <span
-            className={`text-xs px-2 py-1 rounded-full ${
+            className={`text-[10px] sm:text-xs px-2 py-1 rounded-full flex items-center gap-1 ${
               isConnected
                 ? "bg-green-100 text-green-800"
                 : "bg-red-100 text-red-800"
             }`}
           >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                isConnected ? "bg-green-600" : "bg-red-600"
+              }`}
+            ></span>
             {isConnected ? "Connected" : "Disconnected"}
           </span>
         </div>
 
         <div
           ref={chatContainerRef}
-          className="flex-1 overflow-auto p-3 h-[calc(100%-56px)] w-full"
+          className="flex-1 overflow-y-auto p-2 sm:p-3 md:p-4 h-[calc(100%-120px)] w-full scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
         >
-          <div className="space-y-3 min-h-full">
+          <div className="space-y-2 sm:space-y-3 min-h-full">
             {messages.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-gray-400">
+              <div className="flex items-center justify-center h-full text-gray-400 text-xs sm:text-sm md:text-base">
                 No messages yet
               </div>
             ) : (
@@ -206,35 +216,43 @@ function ChatUI() {
                   key={message.id}
                   className={`flex items-end ${
                     message.sender === "User" ? "justify-end" : "justify-start"
-                  }`}
+                  } gap-2`}
                 >
+                  {message.sender !== "User" && (
+                    <div className="w-6 h-6 rounded-full bg-gray-700 flex-shrink-0 mb-1" />
+                  )}
                   <div
-                    className={`max-w-[70%] p-2.5 rounded-2xl ${
+                    className={`max-w-[85%] sm:max-w-[75%] p-2.5 sm:p-3 rounded-2xl ${
                       message.sender === "User"
-                        ? "bg-green-800 text-white ml-auto"
+                        ? "bg-green-800 text-white"
                         : message.isCode
-                        ? "bg-gray-800 text-white font-mono relative mr-auto"
-                        : "bg-gray-100 text-black mr-auto"
+                        ? "bg-gray-800 text-white font-mono"
+                        : "bg-gray-100 text-black"
                     } shadow-sm`}
                   >
                     {message.isCode ? (
-                      <CodeBlock
-                        language={message.language || "jsx"}
-                        filename={`${message.language || "jsx"}`}
-                        code={message.text.replace(/^```[\w]*\n|\n```$/g, "")}
-                      />
+                      <div className="rounded-lg overflow-hidden">
+                        <CodeBlock
+                          language={message.language || "jsx"}
+                          filename={`${message.language || "jsx"}`}
+                          code={message.text.replace(/^```[\w]*\n|\n```$/g, "")}
+                        />
+                      </div>
                     ) : (
-                      <pre className="break-words text-sm whitespace-pre-wrap">
+                      <pre className="break-words text-xs sm:text-sm whitespace-pre-wrap">
                         {message.text}
                       </pre>
                     )}
-                    <span className="text-xs opacity-70 mt-1 inline-block">
+                    <span className="text-[10px] sm:text-xs opacity-70 mt-1 inline-block">
                       {new Date(message.timestamp).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
                     </span>
                   </div>
+                  {message.sender === "User" && (
+                    <div className="w-6 h-6 rounded-full bg-green-700 flex-shrink-0 mb-1" />
+                  )}
                 </div>
               ))
             )}
@@ -243,15 +261,24 @@ function ChatUI() {
         </div>
 
         {/* Input Field */}
-        <div className="p-3 border-t bg-[var(--background)] w-full">
+        <div className="p-2 sm:p-3 md:p-4 border-t bg-[var(--background)] w-full">
           <div className="flex gap-2 items-center">
             <PlaceholdersAndVanishInput
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              onSubmit={sendMessage}
-              className="flex-1 rounded-full text-sm h-12 px-4 w-full"
-              disabled={isSending || !isConnected}
+              onKeyPress={(e) =>
+                e.key === "Enter" && !e.shiftKey && sendMessage()
+              }
+              placeholder="Type your message..."
+              className="flex-1 text-xs sm:text-sm md:text-base min-h-[40px] sm:min-h-[44px] md:min-h-[48px] px-3 py-2 rounded-lg"
             />
+            <Button
+              onClick={sendMessage}
+              disabled={!inputText.trim() || isSending || !isConnected}
+              className="px-4 sm:px-5 h-[40px] sm:h-[44px] md:h-[48px] text-sm sm:text-base bg-green-800 hover:bg-green-900 text-white"
+            >
+              Send
+            </Button>
           </div>
         </div>
       </div>
