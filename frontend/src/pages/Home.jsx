@@ -4,6 +4,7 @@ import React from "react";
 import { SparklesCore } from "../components/ui/sparkles";
 import { RoboAnimation } from "@/components/robo-animation";
 import { FloatingPaper } from "@/components/floating-paper";
+import { Navbar } from "@/components/Navbar";
 // import { Hero } from "@/components/hero";
 import Hero from "@/components/hero";
 
@@ -27,6 +28,7 @@ export default function Home() {
         <FloatingPaper count={10} />
       </div>
       <Hero />
+      <Navbar />
     </div>
   );
 }

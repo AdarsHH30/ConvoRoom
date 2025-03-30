@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { FileText } from "lucide-react";
+import { FileText, BotIcon, Earth } from "lucide-react";
 
 export function FloatingPaper({ count = 5 }) {
   const [dimensions, setDimensions] = useState({ width: 1200, height: 800 });
@@ -55,7 +55,7 @@ export function FloatingPaper({ count = 5 }) {
           }}
         >
           <div className="relative w-16 h-20 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 flex items-center justify-center transform hover:scale-110 transition-transform">
-            <FileText className="w-8 h-8 text-purple-400/50" />
+            <Earth className="w-8 h-8 text-purple-400/50" />
           </div>
         </motion.div>
       ))}

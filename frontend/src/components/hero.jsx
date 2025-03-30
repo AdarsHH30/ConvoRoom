@@ -86,9 +86,9 @@ export default function Hero() {
             transition={{ duration: 0.5 }}
           >
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6">
-              Group Chat with AI using
+              Connecting team with AI
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
-                {"  "}
+                {" "}
                 ConvoRoom
               </span>
             </h1>
@@ -113,28 +113,41 @@ export default function Hero() {
               size="lg"
               onClick={createRoom}
               variant="solid"
-              className="bg-purple-600 hover:bg-purple-700 text-white px-8"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-10 py-7 rounded-lg shadow-lg"
             >
               <FileText className="mr-2 h-5 w-5" />
               Create Room
             </Button>
             {isJoiningRoom ? (
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={roomId}
-                  onChange={(e) => setRoomId(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Enter Room ID"
-                  className="px-4 py-2 rounded border"
-                />
-                <Button onClick={handleJoinRoom}>Join</Button>
-                {errorMessage && <p className="text-red-500">{errorMessage}</p>}
+              <div className="relative">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={roomId}
+                    onChange={(e) => setRoomId(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Enter Room ID"
+                    className="px-4 py-2 rounded-lg border border-gray-300 bg-transparent text-white h-12"
+                  />
+                  <Button
+                    onClick={handleJoinRoom}
+                    className="bg-transparent text-purple-600 border border-purple-600 hover:bg-purple-600/20 px-10 py-2 rounded-lg shadow-lg"
+                    size="lg"
+                    variant="outline"
+                  >
+                    Join
+                  </Button>
+                </div>
+                {errorMessage && (
+                  <p className="absolute text-red-500 left-0 right-0 top-full mt-1">
+                    {errorMessage}
+                  </p>
+                )}
               </div>
             ) : (
               <Button
                 onClick={joinRoom}
-                className="bg-transparent text-purple-600 border border-purple-600 hover:bg-purple-600/20"
+                className="bg-transparent text-purple-600 border border-purple-600 hover:bg-purple-600/20 px-10 py-8 rounded-lg shadow-lg"
                 size="lg"
                 variant="outline"
               >

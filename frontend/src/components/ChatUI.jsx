@@ -4,7 +4,6 @@ import { CodeBlock } from "@/components/ui/code-block";
 import { PlaceholdersAndVanishInput } from "../components/ui/placeholders-and-vanish-input";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const VITE_WS_API = import.meta.env.VITE_WS_API;
-
 function ChatUI() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
@@ -177,7 +176,10 @@ function ChatUI() {
       <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col border overflow-hidden w-full">
         {/* Header */}
         <div className="p-3 border-b bg-[var(--primary)] rounded-t-lg flex justify-between items-center">
-          <h2 className="text-lg font-bold text-[var(--background)]">Chat</h2>
+          <h2 className="text-lg font-bold text-[var(--background)]">
+            Chat [{roomId}]
+            <br />
+          </h2>
           <span
             className={`text-xs px-2 py-1 rounded-full ${
               isConnected
@@ -189,7 +191,6 @@ function ChatUI() {
           </span>
         </div>
 
-        {/* Messages Container */}
         <div
           ref={chatContainerRef}
           className="flex-1 overflow-auto p-3 h-[calc(100%-56px)] w-full"

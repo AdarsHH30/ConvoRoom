@@ -22,6 +22,7 @@
     "esbuild": "^0.25.1",
     "framer-motion": "^12.5.0",
     "lucide-react": "^0.474.0",
+    "mini-svg-data-uri": "^1.4.4",
     "motion": "^12.5.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
