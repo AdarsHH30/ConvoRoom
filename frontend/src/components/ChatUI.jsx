@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { CodeBlock } from "@/components/ui/code-block";
 import { PlaceholdersAndVanishInput } from "../components/ui/placeholders-and-vanish-input";
-import { Button } from "@/components/ui/button";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const VITE_WS_API = import.meta.env.VITE_WS_API;
 function ChatUI() {
@@ -37,6 +36,9 @@ function ChatUI() {
             msg.message.startsWith("```") &&
             msg.message.endsWith("```"),
           language: msg.sender === "AI" ? extractLanguage(msg.message) : null,
+          hasCodeBlocks: msg.sender === "AI" && msg.message.includes("```"),
+          parsedContent:
+            msg.sender === "AI" ? parseMessageContent(msg.message) : null,
         }));
 
         setMessages(formattedMessages);
@@ -52,6 +54,45 @@ function ChatUI() {
     if (!text.startsWith("```")) return null;
     const firstLine = text.split("\n")[0];
     return firstLine.slice(3).trim() || null;
+  };
+
+  const parseMessageContent = (text) => {
+    if (!text) return [{ type: "text", content: "" }];
+
+    const regex = /```([\w]*)\n([\s\S]*?)\n```/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+      // Add text before code block if it exists
+      if (match.index > lastIndex) {
+        parts.push({
+          type: "text",
+          content: text.substring(lastIndex, match.index),
+        });
+      }
+
+      // Add code block
+      parts.push({
+        type: "code",
+        language: match[1] || "jsx",
+        content: match[2],
+      });
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Add remaining text after last code block if any
+    if (lastIndex < text.length) {
+      parts.push({
+        type: "text",
+        content: text.substring(lastIndex),
+      });
+    }
+
+    // If no code blocks were found, return the entire text
+    return parts.length > 0 ? parts : [{ type: "text", content: text }];
   };
 
   const handleWebSocketMessage = useCallback((event) => {
@@ -76,6 +117,9 @@ function ChatUI() {
             data.message.endsWith("```"),
           language:
             data.username === "AI" ? extractLanguage(data.message) : null,
+          hasCodeBlocks: data.username === "AI" && data.message.includes("```"),
+          parsedContent:
+            data.username === "AI" ? parseMessageContent(data.message) : null,
         },
       ]);
     } catch (error) {
@@ -145,6 +189,8 @@ function ChatUI() {
               isCode:
                 aiResponse.startsWith("```") && aiResponse.endsWith("```"),
               language: extractLanguage(aiResponse),
+              hasCodeBlocks: aiResponse.includes("```"),
+              parsedContent: parseMessageContent(aiResponse),
             },
           ]);
         }
@@ -173,41 +219,41 @@ function ChatUI() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-1 sm:p-2 md:p-4 h-[90vh] flex flex-col">
+    <div className="w-full max-w-4xl mx-auto p-4 h-[90vh] flex flex-col">
       <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col border overflow-hidden w-full">
         {/* Header */}
-        <div className="p-2.5 sm:p-3 md:p-4 border-b bg-[var(--primary)] rounded-t-lg flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <h2 className="text-sm sm:text-base md:text-lg font-bold text-[var(--background)] truncate">
-              Chat Room
-            </h2>
-            <span className="text-xs sm:text-sm text-[var(--background)] opacity-75">
-              [{roomId}]
-            </span>
-          </div>
+        <div className="p-3 border-b bg-[var(--primary)] rounded-t-lg flex justify-between items-center">
+          <h2 className="text-lg font-bold text-[var(--background)]">
+            Chat [{roomId}]
+            <br />
+          </h2>
           <span
-            className={`text-[10px] sm:text-xs px-2 py-1 rounded-full flex items-center gap-1 ${
+            className={`text-xs px-2 py-1 rounded-full ${
               isConnected
                 ? "bg-green-100 text-green-800"
                 : "bg-red-100 text-red-800"
             }`}
           >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                isConnected ? "bg-green-600" : "bg-red-600"
-              }`}
-            ></span>
             {isConnected ? "Connected" : "Disconnected"}
           </span>
         </div>
 
         <div
           ref={chatContainerRef}
-          className="flex-1 overflow-y-auto p-2 sm:p-3 md:p-4 h-[calc(100%-120px)] w-full scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+          className="flex-1 overflow-auto p-3 h-[calc(100%-56px)] w-full scrollbar-hide"
+          style={{
+            scrollbarWidth: "none" /* Firefox */,
+            msOverflowStyle: "none" /* IE and Edge */,
+          }}
         >
-          <div className="space-y-2 sm:space-y-3 min-h-full">
+          <style jsx>{`
+            div::-webkit-scrollbar {
+              display: none; /* Chrome, Safari, Opera */
+            }
+          `}</style>
+          <div className="space-y-3 min-h-full">
             {messages.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-gray-400 text-xs sm:text-sm md:text-base">
+              <div className="flex items-center justify-center h-full text-gray-400">
                 No messages yet
               </div>
             ) : (
@@ -216,43 +262,53 @@ function ChatUI() {
                   key={message.id}
                   className={`flex items-end ${
                     message.sender === "User" ? "justify-end" : "justify-start"
-                  } gap-2`}
+                  }`}
                 >
-                  {message.sender !== "User" && (
-                    <div className="w-6 h-6 rounded-full bg-gray-700 flex-shrink-0 mb-1" />
-                  )}
                   <div
-                    className={`max-w-[85%] sm:max-w-[75%] p-2.5 sm:p-3 rounded-2xl ${
+                    className={`max-w-[70%] p-2.5 rounded-2xl ${
                       message.sender === "User"
-                        ? "bg-green-800 text-white"
-                        : message.isCode
-                        ? "bg-gray-800 text-white font-mono"
-                        : "bg-gray-100 text-black"
+                        ? "bg-green-800 text-white ml-auto"
+                        : "bg-gray-100 text-black mr-auto"
                     } shadow-sm`}
                   >
-                    {message.isCode ? (
-                      <div className="rounded-lg overflow-hidden">
-                        <CodeBlock
-                          language={message.language || "jsx"}
-                          filename={`${message.language || "jsx"}`}
-                          code={message.text.replace(/^```[\w]*\n|\n```$/g, "")}
-                        />
+                    {message.sender === "AI" && message.hasCodeBlocks ? (
+                      <div>
+                        {message.parsedContent.map((part, index) => (
+                          <React.Fragment key={index}>
+                            {part.type === "text" ? (
+                              <pre className="break-words text-sm whitespace-pre-wrap mb-2">
+                                {part.content}
+                              </pre>
+                            ) : (
+                              <div className="my-2">
+                                <CodeBlock
+                                  language={part.language || "jsx"}
+                                  filename={`${part.language || "jsx"}`}
+                                  code={part.content}
+                                />
+                              </div>
+                            )}
+                          </React.Fragment>
+                        ))}
                       </div>
+                    ) : message.isCode ? (
+                      <CodeBlock
+                        language={message.language || "jsx"}
+                        filename={`${message.language || "jsx"}`}
+                        code={message.text.replace(/^```[\w]*\n|\n```$/g, "")}
+                      />
                     ) : (
-                      <pre className="break-words text-xs sm:text-sm whitespace-pre-wrap">
+                      <pre className="break-words text-sm whitespace-pre-wrap">
                         {message.text}
                       </pre>
                     )}
-                    <span className="text-[10px] sm:text-xs opacity-70 mt-1 inline-block">
+                    <span className="text-xs opacity-70 mt-1 inline-block">
                       {new Date(message.timestamp).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
                     </span>
                   </div>
-                  {message.sender === "User" && (
-                    <div className="w-6 h-6 rounded-full bg-green-700 flex-shrink-0 mb-1" />
-                  )}
                 </div>
               ))
             )}
@@ -261,24 +317,15 @@ function ChatUI() {
         </div>
 
         {/* Input Field */}
-        <div className="p-2 sm:p-3 md:p-4 border-t bg-[var(--background)] w-full">
+        <div className="p-3 border-t bg-[var(--background)] w-full">
           <div className="flex gap-2 items-center">
             <PlaceholdersAndVanishInput
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              onKeyPress={(e) =>
-                e.key === "Enter" && !e.shiftKey && sendMessage()
-              }
-              placeholder="Type your message..."
-              className="flex-1 text-xs sm:text-sm md:text-base min-h-[40px] sm:min-h-[44px] md:min-h-[48px] px-3 py-2 rounded-lg"
+              onSubmit={sendMessage}
+              className="flex-1 rounded-full text-sm h-12 px-4 w-full"
+              disabled={isSending || !isConnected}
             />
-            <Button
-              onClick={sendMessage}
-              disabled={!inputText.trim() || isSending || !isConnected}
-              className="px-4 sm:px-5 h-[40px] sm:h-[44px] md:h-[48px] text-sm sm:text-base bg-green-800 hover:bg-green-900 text-white"
-            >
-              Send
-            </Button>
           </div>
         </div>
       </div>

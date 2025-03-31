@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import FetchRoomId from "../components/fetchRoomId";
 import ChatUI from "../components/ChatUI";
 import { Boxes } from "../components/ui/background-boxes.jsx";
+import { SparklesCore } from "../components/ui/sparkles";
 import {
   ArrowBigLeft,
   PersonStanding,
@@ -10,6 +11,7 @@ import {
   Link,
   ChevronLeft,
 } from "lucide-react";
+import { SparkleIcon } from "lucide-react";
 
 const Room = () => {
   const { roomId } = useParams();
