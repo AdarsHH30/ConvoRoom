@@ -10,7 +10,7 @@ import {
   IconTerminal2,
 } from "@tabler/icons-react";
 
-export function Navbar() {
+export function Footer() {
   const links = [
     {
       title: "GitHub",

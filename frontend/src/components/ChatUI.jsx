@@ -4,16 +4,50 @@ import { CodeBlock } from "@/components/ui/code-block";
 import { PlaceholdersAndVanishInput } from "../components/ui/placeholders-and-vanish-input";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const VITE_WS_API = import.meta.env.VITE_WS_API;
+
 function ChatUI() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [recentRooms, setRecentRooms] = useState([]);
+  const [showRecentRooms, setShowRecentRooms] = useState(false);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
   const wsRef = useRef(null);
   const messageTracker = useRef(new Set());
   const roomId = window.location.pathname.split("/").pop();
+  const roomName = `Room ${roomId}`;
+
+  useEffect(() => {
+    const loadRecentRooms = () => {
+      const rooms = JSON.parse(localStorage.getItem("recentRooms")) || [];
+      setRecentRooms(rooms);
+    };
+
+    loadRecentRooms();
+  }, []);
+
+  useEffect(() => {
+    const saveRoomToRecent = () => {
+      let rooms = JSON.parse(localStorage.getItem("recentRooms")) || [];
+      rooms = rooms.filter((room) => room.id !== roomId);
+      rooms.unshift({ id: roomId, name: roomName });
+      if (rooms.length > 5) {
+        rooms.pop();
+      }
+      localStorage.setItem("recentRooms", JSON.stringify(rooms));
+      setRecentRooms(rooms);
+    };
+
+    if (roomId) {
+      saveRoomToRecent();
+    }
+  }, [roomId, roomName]);
+
+  const navigateToRoom = (roomId) => {
+    window.location.href = `/room/${roomId}`;
+  };
 
   useEffect(() => {
     const fetchChatHistory = async () => {
@@ -65,7 +99,6 @@ function ChatUI() {
     let match;
 
     while ((match = regex.exec(text)) !== null) {
-      // Add text before code block if it exists
       if (match.index > lastIndex) {
         parts.push({
           type: "text",
@@ -73,7 +106,6 @@ function ChatUI() {
         });
       }
 
-      // Add code block
       parts.push({
         type: "code",
         language: match[1] || "jsx",
@@ -83,7 +115,6 @@ function ChatUI() {
       lastIndex = match.index + match[0].length;
     }
 
-    // Add remaining text after last code block if any
     if (lastIndex < text.length) {
       parts.push({
         type: "text",
@@ -91,7 +122,6 @@ function ChatUI() {
       });
     }
 
-    // If no code blocks were found, return the entire text
     return parts.length > 0 ? parts : [{ type: "text", content: text }];
   };
 
@@ -221,12 +251,35 @@ function ChatUI() {
   return (
     <div className="w-full max-w-4xl mx-auto p-4 h-[90vh] flex flex-col">
       <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col border overflow-hidden w-full">
-        {/* Header */}
         <div className="p-3 border-b bg-[var(--primary)] rounded-t-lg flex justify-between items-center">
-          <h2 className="text-lg font-bold text-[var(--background)]">
-            Chat [{roomId}]
-            <br />
-          </h2>
+          <div className="flex flex-col relative">
+            <h2
+              className="text-lg font-bold text-[var(--background)] cursor-pointer"
+              onClick={() => setShowRecentRooms(!showRecentRooms)}
+            >
+              Chat [{roomId}]
+            </h2>
+            {showRecentRooms && recentRooms.length > 0 && (
+              <div className="absolute top-full left-0 mt-1 bg-white border rounded-md shadow-lg z-10 w-48">
+                <ul className="py-1">
+                  <li className="px-3 py-2 text-sm font-semibold text-gray-700 border-b">
+                    Recent Rooms
+                  </li>
+                  {recentRooms.map((room) => (
+                    <li
+                      key={room.id}
+                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm flex items-center"
+                      onClick={() => navigateToRoom(room.id)}
+                    >
+                      <span className="w-full truncate">
+                        {room.name} (#{room.id})
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
           <span
             className={`text-xs px-2 py-1 rounded-full ${
               isConnected
@@ -242,13 +295,13 @@ function ChatUI() {
           ref={chatContainerRef}
           className="flex-1 overflow-auto p-3 h-[calc(100%-56px)] w-full scrollbar-hide"
           style={{
-            scrollbarWidth: "none" /* Firefox */,
-            msOverflowStyle: "none" /* IE and Edge */,
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
           }}
         >
           <style jsx>{`
             div::-webkit-scrollbar {
-              display: none; /* Chrome, Safari, Opera */
+              display: none;
             }
           `}</style>
           <div className="space-y-3 min-h-full">
@@ -316,7 +369,6 @@ function ChatUI() {
           </div>
         </div>
 
-        {/* Input Field */}
         <div className="p-3 border-t bg-[var(--background)] w-full">
           <div className="flex gap-2 items-center">
             <PlaceholdersAndVanishInput

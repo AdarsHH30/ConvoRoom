@@ -4,14 +4,11 @@ import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ModeToggle";
 import { Input } from "@/components/ui/input";
 import { SparklesCore } from "../components/ui/sparkles";
-import { RoboAnimation } from "@/components/robo-animation";
-import { FloatingPaper } from "@/components/floating-paper";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 

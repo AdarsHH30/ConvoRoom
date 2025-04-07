@@ -2,16 +2,14 @@
 
 import React from "react";
 import { SparklesCore } from "../components/ui/sparkles";
-import { RoboAnimation } from "@/components/robo-animation";
 import { FloatingPaper } from "@/components/floating-paper";
-import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 // import { Hero } from "@/components/hero";
 import Hero from "@/components/hero";
 
 export default function Home() {
   return (
     <div className="min-h-screen w-full bg-black flex flex-col items-center justify-between overflow-hidden relative py-4 sm:py-6">
-      {/* Background Effects */}
       <div className="absolute inset-0 z-0">
         <SparklesCore
           id="sparkles"
@@ -27,20 +25,16 @@ export default function Home() {
         />
       </div>
 
-      {/* Floating Papers */}
       <div className="absolute inset-0 overflow-hidden z-0">
         <FloatingPaper count={window.innerWidth < 768 ? 6 : 10} />
       </div>
 
-      {/* Main Content */}
       <div className="relative z-10 w-full flex-1 flex flex-col justify-between items-center">
         <div className="w-full flex-grow flex items-center justify-center">
           <Hero />
         </div>
-        <div className="w-full">
-          <Navbar />
-        </div>
       </div>
+      <Footer />
     </div>
   );
 }

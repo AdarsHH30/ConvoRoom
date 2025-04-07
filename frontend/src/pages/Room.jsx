@@ -2,17 +2,7 @@ import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import FetchRoomId from "../components/fetchRoomId";
 import ChatUI from "../components/ChatUI";
-import { Boxes } from "../components/ui/background-boxes.jsx";
-import { SparklesCore } from "../components/ui/sparkles";
-import {
-  ArrowBigLeft,
-  PersonStanding,
-  UserPlus,
-  Link,
-  ChevronLeft,
-} from "lucide-react";
-import { SparkleIcon } from "lucide-react";
-
+import { UserPlus, Link, ChevronLeft } from "lucide-react";
 const Room = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
@@ -51,7 +41,7 @@ const Room = () => {
         </button>
         <button
           onClick={handleCopyLink}
-          className="p-2 flex items-center gap-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition"
+          className="p-2 flex items-left gap-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition"
         >
           <Link />
         </button>
