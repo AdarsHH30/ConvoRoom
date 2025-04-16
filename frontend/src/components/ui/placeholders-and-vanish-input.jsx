@@ -29,14 +29,14 @@ export function PlaceholdersAndVanishInput({
   const startAnimation = () => {
     intervalRef.current = setInterval(() => {
       setCurrentPlaceholder((prev) => (prev + 1) % placeholders.length);
-    }, 3000);
+    }, 2000);
   };
   const handleVisibilityChange = () => {
     if (document.visibilityState !== "visible" && intervalRef.current) {
-      clearInterval(intervalRef.current); // Clear the interval when the tab is not visible
+      clearInterval(intervalRef.current);
       intervalRef.current = null;
     } else if (document.visibilityState === "visible") {
-      startAnimation(); // Restart the interval when the tab becomes visible
+      startAnimation();
     }
   };
 
@@ -161,11 +161,9 @@ export function PlaceholdersAndVanishInput({
     animateFrame(start);
   };
 
-  // Modified to support Shift+Enter for new lines
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       if (e.shiftKey) {
-        // Allow default behavior for Shift+Enter to create a new line
         return;
       } else if (!animating) {
         e.preventDefault(); // Prevent default only for regular Enter
@@ -173,7 +171,6 @@ export function PlaceholdersAndVanishInput({
       }
     }
 
-    // Call external key down handler if provided
     externalKeyDown && externalKeyDown(e);
   };
 
@@ -217,7 +214,6 @@ export function PlaceholdersAndVanishInput({
             setValue(e.target.value);
             onChange && onChange(e);
 
-            // Auto-resize textarea height
             e.target.style.height = "auto";
             e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
           }
@@ -234,6 +230,10 @@ export function PlaceholdersAndVanishInput({
           minHeight: "48px",
           maxHeight: "120px",
           overflowY: "auto",
+          lineHeight: "24px",
+          display: "flex",
+          alignItems: "center",
+          paddingTop: "12px",
         }}
       />
       <div className="absolute inset-0 flex items-center rounded-full pointer-events-none">

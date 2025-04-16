@@ -4,11 +4,12 @@ import { CodeBlock } from "@/components/ui/code-block";
 import { PlaceholdersAndVanishInput } from "../components/ui/placeholders-and-vanish-input";
 import { Button } from "../components/ui/button";
 import { motion } from "motion/react";
+import { flushSync } from "react-dom";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const VITE_WS_API = import.meta.env.VITE_WS_API;
 
 const TypingIndicator = () => (
-  <div className="flex items-center space-x-1 px-2 py-1 rounded-lg  w-16">
+  <div className="flex items-center justify-center space-x-1 px-2 py-1 rounded-lg w-16">
     {[1, 2, 3].map((dot) => (
       <motion.div
         key={dot}
@@ -256,13 +257,20 @@ function ChatUI() {
 
   const sendMessage = useCallback(async () => {
     if (!inputText.trim() || isSending || !isConnected) return;
+
+    const messageToSend = inputText;
+
+    flushSync(() => {
+      setInputText("");
+    });
+
     setIsSending(true);
 
-    const contentId = `User-${inputText}`;
+    const contentId = `User-${messageToSend}`;
     const messageData = {
       id: `${contentId}-${Date.now()}`,
       sender: "User",
-      text: inputText,
+      text: messageToSend,
       timestamp: new Date().toISOString(),
       isCode: false,
     };
@@ -272,9 +280,6 @@ function ChatUI() {
       setMessages((prev) => [...prev, messageData]);
       scrollToBottom();
     }
-
-    const messageToSend = inputText;
-    setInputText("");
 
     try {
       wsRef.current?.send(
@@ -329,6 +334,8 @@ function ChatUI() {
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
+
+      setInputText("");
       sendMessage();
     }
   };
@@ -374,7 +381,7 @@ function ChatUI() {
               className="text-lg font-bold text-[var(--background)] cursor-pointer"
               onClick={() => setShowRecentRooms(!showRecentRooms)}
             >
-              Chat [{roomId}]<span className="ml-2 text-xs opacity-70">↓</span>
+              ConvoRoom<span className="ml-2 text-xs opacity-70">↓</span>
             </h2>
             {showRecentRooms && recentRooms.length > 0 && (
               <div className="absolute top-full left-0 mt-1 bg-white dark:bg-zinc-800 rounded-md shadow-lg z-10 w-48">
@@ -398,22 +405,29 @@ function ChatUI() {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <button
+            {/* <button
               onClick={clearChat}
               className="text-xs px-2 py-1 bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-md hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
               title="Clear chat history"
             >
               Clear
-            </button>
-            <span
-              className={`text-xs px-2 py-1 rounded-full ${
-                isConnected
-                  ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-400"
-                  : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-400"
-              }`}
-            >
-              {isConnected ? "Connected" : "Disconnected"}
-            </span>
+            </button> */}
+            <div className="flex items-center gap-1">
+              <span
+                className={`inline-block w-2 h-2 rounded-full ${
+                  isConnected ? "bg-green-500" : "bg-red-500"
+                }`}
+              ></span>
+              <span
+                className={`text-xs px-2 py-1 rounded-full ${
+                  isConnected
+                    ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-400"
+                    : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-400"
+                }`}
+              >
+                {isConnected ? "Connected" : "Disconnected"}
+              </span>
+            </div>
           </div>
         </div>
 

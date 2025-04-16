@@ -1,8 +1,16 @@
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import FetchRoomId from "../components/fetchRoomId";
+
 import ChatUI from "../components/ChatUI";
-import { UserPlus, Link, ChevronLeft, Copy, Check } from "lucide-react";
+import {
+  UserPlus,
+  Link,
+  ChevronLeft,
+  Copy,
+  Check,
+  ChevronRight,
+} from "lucide-react";
 const Room = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
@@ -38,26 +46,28 @@ const Room = () => {
       .catch((err) => console.error("Failed to copy: ", err));
   };
 
+  const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
+
   return (
     <div className="w-full h-screen flex flex-col">
       {/* Header */}
       <div className="flex justify-between items-center p-4 bg-[var(--background)] border-b">
         <button
           onClick={() => navigate("/")}
-          className="p-2 flex items-center gap-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition"
+          className="p-2 flex items-center gap-2  text-white rounded-lg hover:bg-green-900 transition"
         >
           <ChevronLeft />
         </button>
         <div className="flex gap-2">
           <button
             onClick={handleCopyLink}
-            className="p-2 flex items-center gap-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition"
+            className="p-2 flex items-center gap-2  text-white rounded-lg hover:bg-green-900 transition"
           >
             {linkCopied ? <Check /> : <Link />}
           </button>
           <button
             onClick={handleCopyInvite}
-            className="p-2 flex items-center gap-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition"
+            className="p-2 flex items-center gap- text-white rounded-lg hover:bg-green-900 transition"
           >
             {inviteCopied ? <Check /> : <Copy />}
           </button>
