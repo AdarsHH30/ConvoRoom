@@ -269,7 +269,7 @@ export default function Hero() {
           >
             <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 sm:mb-3 md:mb-4 leading-tight">
               Connecting team with AI
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-black-600 block sm:inline">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-100 block sm:inline">
                 {" "}
                 ConvoRoom
               </span>
@@ -313,20 +313,20 @@ export default function Hero() {
                         {errorMessage}
                       </p>
                     )}
-                    <div className="flex gap-2 mt-2">
-                      <Button
+                    <div className="flex gap-4 mt-2">
+                      <button
                         onClick={handleJoinRoom}
                         disabled={isLoading}
-                        className="flex-1 bg-green-800 hover:bg-green-700 text-white py-2.5 rounded-lg shadow-lg text-sm sm:text-base"
+                        className="flex-1  bg-green-800 hover:bg-green-700 text-white py-2.5 rounded-lg shadow-lg text-sm sm:text-base"
                       >
                         {isLoading ? "Joining..." : "Join Room"}
-                      </Button>
-                      <Button
+                      </button>
+                      <button
                         onClick={cancelJoin}
-                        className="bg-transparent border border-gray-600 hover:bg-gray-800/30 text-gray-300 py-2.5 rounded-lg shadow-lg text-sm sm:text-base"
+                        className="flex-1 bg-transparent border border-gray-600 hover:bg-gray-800/30 text-gray-300 py-1 rounded-lg shadow-lg text-sm sm:text-base"
                       >
                         Cancel
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 </div>
