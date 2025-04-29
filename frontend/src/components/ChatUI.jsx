@@ -7,6 +7,8 @@ import { motion } from "motion/react";
 import { flushSync } from "react-dom";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const VITE_WS_API = import.meta.env.VITE_WS_API;
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const TypingIndicator = () => (
   <div className="flex items-center justify-center space-x-1 px-2 py-1 rounded-lg w-16">
@@ -474,9 +476,21 @@ function ChatUI() {
                         {message.parsedContent.map((part, index) => (
                           <React.Fragment key={index}>
                             {part.type === "text" ? (
-                              <pre className="break-words text-sm whitespace-pre-wrap mb-2">
-                                {part.content}
-                              </pre>
+                              <div className="break-words text-sm mb-2">
+                                <ReactMarkdown
+                                  remarkPlugins={[remarkGfm]}
+                                  components={{
+                                    p: ({ node, ...props }) => (
+                                      <p
+                                        {...props}
+                                        className="prose dark:prose-invert prose-sm max-w-none"
+                                      />
+                                    ),
+                                  }}
+                                >
+                                  {part.content}
+                                </ReactMarkdown>
+                              </div>
                             ) : (
                               <div className="my-2 relative code-block-container">
                                 <div className="absolute top-0 right-0 z-10">
@@ -548,9 +562,27 @@ function ChatUI() {
                         />
                       </div>
                     ) : (
-                      <pre className="break-words text-sm whitespace-pre-wrap">
-                        {message.text}
-                      </pre>
+                      <div className="break-words text-sm">
+                        {message.sender === "AI" ? (
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              p: ({ node, ...props }) => (
+                                <p
+                                  {...props}
+                                  className="prose dark:prose-invert prose-sm max-w-none whitespace-pre-wrap"
+                                />
+                              ),
+                            }}
+                          >
+                            {message.text}
+                          </ReactMarkdown>
+                        ) : (
+                          <pre className="whitespace-pre-wrap">
+                            {message.text}
+                          </pre>
+                        )}
+                      </div>
                     )}
                     <span
                       className="text-xs opacity-70 mt-1 inline-block hover:opacity-100 transition-opacity cursor-default message-timestamp"
