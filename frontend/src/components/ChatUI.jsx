@@ -374,6 +374,26 @@ function ChatUI() {
     localStorage.removeItem(`chat_${roomId}`);
   };
 
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowRecentRooms(false);
+      }
+    };
+
+    // Add event listener when dropdown is open
+    if (showRecentRooms) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    // Clean up the event listener
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showRecentRooms]);
+
   return (
     <div className="w-full max-w-4xl mx-auto p-2 md:p-4 h-[90vh] flex flex-col">
       <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col overflow-hidden w-full">
@@ -386,7 +406,10 @@ function ChatUI() {
               ConvoRoom<span className="ml-2 text-xs opacity-70">↓</span>
             </h2>
             {showRecentRooms && recentRooms.length > 0 && (
-              <div className="absolute top-full left-0 mt-1 bg-white dark:bg-zinc-800 rounded-md shadow-lg z-10 w-48">
+              <div
+                ref={dropdownRef}
+                className="absolute top-full left-0 mt-1 bg-white dark:bg-zinc-800 rounded-md shadow-lg z-10 w-48"
+              >
                 <ul className="py-1">
                   <li className="px-3 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 border-b">
                     Recent Rooms
