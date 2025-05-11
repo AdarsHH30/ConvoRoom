@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import FetchRoomId from "../components/fetchRoomId";
-
+import BallTrail from "@/components/ui/ballTrail";
 import ChatUI from "../components/ChatUI";
 import {
   UserPlus,
@@ -50,7 +50,6 @@ const Room = () => {
 
   return (
     <div className="w-full h-screen flex flex-col">
-      {/* Header */}
       <div className="flex justify-between items-center p-4 bg-[var(--background)] border-b">
         <button
           onClick={() => navigate("/")}

@@ -9,6 +9,8 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const VITE_WS_API = import.meta.env.VITE_WS_API;
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import MessageSender from "./MessageSender";
+import { getUserIdentity } from "../utils/userIdentification";
 
 const TypingIndicator = () => (
   <div className="flex items-center justify-center space-x-1 px-2 py-1 rounded-lg w-16">
@@ -39,12 +41,12 @@ const MessageActions = ({ message, copyToClipboard }) => {
     >
       {(showActions || window.innerWidth < 768) && message.sender === "AI" && (
         <div className="absolute -top-8 right-0 flex space-x-2 bg-white dark:bg-zinc-800 p-1 rounded-md shadow-md z-10">
-          <button
+          {/* <button
             className="text-xs p-1 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded"
             onClick={() => copyToClipboard(message.text)}
             title="Copy message"
-          >
-            <svg
+          > */}
+          {/* <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-4 w-4"
               fill="none"
@@ -58,7 +60,7 @@ const MessageActions = ({ message, copyToClipboard }) => {
                 d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
               />
             </svg>
-          </button>
+          </button> */}
         </div>
       )}
     </div>
@@ -74,12 +76,18 @@ function ChatUI() {
   const [recentRooms, setRecentRooms] = useState([]);
   const [showRecentRooms, setShowRecentRooms] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [username, setUsername] = useState("");
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
   const wsRef = useRef(null);
   const messageTracker = useRef(new Set());
   const roomId = window.location.pathname.split("/").pop();
   const roomName = `Room ${roomId}`;
+
+  useEffect(() => {
+    const { username: storedUsername } = getUserIdentity();
+    setUsername(storedUsername);
+  }, []);
 
   useEffect(() => {
     const loadRecentRooms = () => {
@@ -211,7 +219,9 @@ function ChatUI() {
         const data = JSON.parse(event.data);
         if (data.type !== "chat_message") return;
 
-        const contentId = `${data.username}-${data.message}`;
+        const messageSender = data.username || "Unknown";
+
+        const contentId = `${messageSender}-${data.message}`;
         if (messageTracker.current.has(contentId)) return;
         messageTracker.current.add(contentId);
 
@@ -219,19 +229,19 @@ function ChatUI() {
           ...prev,
           {
             id: `${contentId}-${Date.now()}`,
-            sender: data.username,
+            sender: messageSender,
             text: data.message,
             timestamp: new Date().toISOString(),
             isCode:
-              data.username === "AI" &&
+              messageSender === "AI" &&
               data.message.startsWith("```") &&
               data.message.endsWith("```"),
             language:
-              data.username === "AI" ? extractLanguage(data.message) : null,
+              messageSender === "AI" ? extractLanguage(data.message) : null,
             hasCodeBlocks:
-              data.username === "AI" && data.message.includes("```"),
+              messageSender === "AI" && data.message.includes("```"),
             parsedContent:
-              data.username === "AI" ? parseMessageContent(data.message) : null,
+              messageSender === "AI" ? parseMessageContent(data.message) : null,
           },
         ]);
 
@@ -246,6 +256,8 @@ function ChatUI() {
   );
 
   useEffect(() => {
+    if (!username) return;
+
     const ws = new WebSocket(`${VITE_WS_API}ws/room/${roomId}/`);
     wsRef.current = ws;
 
@@ -255,10 +267,10 @@ function ChatUI() {
     ws.onclose = () => setIsConnected(false);
 
     return () => ws.close(1000, "Component unmounted");
-  }, [roomId, handleWebSocketMessage]);
+  }, [roomId, handleWebSocketMessage, username]);
 
   const sendMessage = useCallback(async () => {
-    if (!inputText.trim() || isSending || !isConnected) return;
+    if (!inputText.trim() || isSending || !isConnected || !username) return;
 
     const messageToSend = inputText;
 
@@ -268,10 +280,10 @@ function ChatUI() {
 
     setIsSending(true);
 
-    const contentId = `User-${messageToSend}`;
+    const contentId = `${username}-${messageToSend}`;
     const messageData = {
       id: `${contentId}-${Date.now()}`,
-      sender: "User",
+      sender: username,
       text: messageToSend,
       timestamp: new Date().toISOString(),
       isCode: false,
@@ -285,7 +297,12 @@ function ChatUI() {
 
     try {
       wsRef.current?.send(
-        JSON.stringify({ type: "chat_message", message: messageToSend, roomId })
+        JSON.stringify({
+          type: "chat_message",
+          message: messageToSend,
+          roomId,
+          username,
+        })
       );
 
       setIsTyping(true);
@@ -293,7 +310,11 @@ function ChatUI() {
       const response = await fetch(`${BACKEND_URL}api/data/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: messageToSend, roomId }),
+        body: JSON.stringify({
+          message: messageToSend,
+          roomId,
+          username,
+        }),
       });
 
       if (!response.ok) throw new Error("API response not OK");
@@ -326,12 +347,12 @@ function ChatUI() {
       }
     } catch (error) {
       console.error("Message sending failed:", error);
-      setMessages((prev) => prev.filter((msg) => msg.id !== contentId));
+      setMessages((prev) => prev.filter((msg) => msg.id !== messageData.id));
       setIsTyping(false);
     } finally {
       setIsSending(false);
     }
-  }, [inputText, isSending, isConnected, roomId]);
+  }, [inputText, isSending, isConnected, roomId, username]);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -383,19 +404,17 @@ function ChatUI() {
       }
     };
 
-    // Add event listener when dropdown is open
     if (showRecentRooms) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
-    // Clean up the event listener
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showRecentRooms]);
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-2 md:p-4 h-[90vh] flex flex-col">
+    <div className="w-full max-w-5xl mx-auto p-2 md:p-4 h-[90vh] flex flex-col">
       <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col overflow-hidden w-full">
         <div className="p-3 bg-[var(--primary)] rounded-t-lg flex justify-between items-center">
           <div className="flex flex-col relative">
@@ -403,7 +422,7 @@ function ChatUI() {
               className="text-lg font-bold text-[var(--background)] cursor-pointer"
               onClick={() => setShowRecentRooms(!showRecentRooms)}
             >
-              ConvoRoom<span className="ml-2 text-xs opacity-70">↓</span>
+              ConvoRoom <span className="ml-2 text-xs opacity-70">↓</span>
             </h2>
             {showRecentRooms && recentRooms.length > 0 && (
               <div
@@ -430,13 +449,6 @@ function ChatUI() {
             )}
           </div>
           <div className="flex items-center gap-2">
-            {/* <button
-              onClick={clearChat}
-              className="text-xs px-2 py-1 bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-md hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
-              title="Clear chat history"
-            >
-              Clear
-            </button> */}
             <div className="flex items-center gap-1">
               <span
                 className={`inline-block w-2 h-2 rounded-full ${
@@ -453,6 +465,11 @@ function ChatUI() {
                 {isConnected ? "Connected" : "Disconnected"}
               </span>
             </div>
+            {username && (
+              <div className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-400">
+                You: {username}
+              </div>
+            )}
           </div>
         </div>
 
@@ -478,15 +495,20 @@ function ChatUI() {
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex items-end ${
-                    message.sender === "User" ? "justify-end" : "justify-start"
+                  className={`flex flex-col ${
+                    message.sender === username ? "items-end" : "items-start"
                   }`}
                 >
+                  <MessageSender
+                    name={message.sender}
+                    isAI={message.sender === "AI"}
+                  />
+
                   <div
                     className={`max-w-[70%] md:max-w-[80%] p-2.5 rounded-2xl message-bubble ${
-                      message.sender === "User"
-                        ? "bg-green-800 text-white ml-auto"
-                        : "bg-gray-100 text-black dark:bg-zinc-800 dark:text-white mr-auto"
+                      message.sender === username
+                        ? "bg-green-800 text-white"
+                        : "bg-gray-100 text-black dark:bg-zinc-800 dark:text-white"
                     } shadow-sm relative`}
                   >
                     <MessageActions
@@ -586,25 +608,19 @@ function ChatUI() {
                       </div>
                     ) : (
                       <div className="break-words text-sm">
-                        {message.sender === "AI" ? (
-                          <ReactMarkdown
-                            remarkPlugins={[remarkGfm]}
-                            components={{
-                              p: ({ node, ...props }) => (
-                                <p
-                                  {...props}
-                                  className="prose dark:prose-invert prose-sm max-w-none whitespace-pre-wrap"
-                                />
-                              ),
-                            }}
-                          >
-                            {message.text}
-                          </ReactMarkdown>
-                        ) : (
-                          <pre className="whitespace-pre-wrap">
-                            {message.text}
-                          </pre>
-                        )}
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            p: ({ node, ...props }) => (
+                              <p
+                                {...props}
+                                className="prose dark:prose-invert prose-sm max-w-none whitespace-pre-wrap"
+                              />
+                            ),
+                          }}
+                        >
+                          {message.text}
+                        </ReactMarkdown>
                       </div>
                     )}
                     <span
@@ -672,11 +688,13 @@ function ChatUI() {
               className={`flex-1 rounded-full text-sm px-4 w-full auto-resize-input ${
                 messages.length === 0 ? "max-w-md" : ""
               }`}
-              disabled={isSending || !isConnected}
+              disabled={isSending || !isConnected || !username}
             />
             <button
               onClick={sendMessage}
-              disabled={!inputText.trim() || isSending || !isConnected}
+              disabled={
+                !inputText.trim() || isSending || !isConnected || !username
+              }
               className="h-10 w-10 rounded-full bg-black dark:bg-zinc-800 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
             >
               <svg
