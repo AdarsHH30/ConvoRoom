@@ -1,3 +1,4 @@
+"use client";
 // Example React component (e.g., DataSender.js)
 // import { Input } from "postcss";
 import React, { useState } from "react";

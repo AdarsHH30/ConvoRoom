@@ -4,7 +4,7 @@ import { flushSync } from "react-dom";
 import { ChatHeader } from "./ChatHeader";
 import { MessageList } from "./MessageList";
 import { ChatInput } from "./ChatInput";
-import { getUserIdentity } from "../utils/userIdentification";
+import { getUserIdentity } from "../../utils/userIdentification";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const VITE_WS_API = import.meta.env.VITE_WS_API;
@@ -138,7 +138,7 @@ function ChatUI() {
     };
 
     fetchChatHistory();
-  }, [roomId]);
+  }, [roomId, username]);
 
   const handleWebSocketMessage = useCallback(
     (event) => {

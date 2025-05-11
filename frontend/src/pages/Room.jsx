@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import FetchRoomId from "../components/fetchRoomId";
 import BallTrail from "@/components/ui/ballTrail";
-import ChatUI from "../components/ChatUI";
+import ChatUI from "../components/chat/ChatUI";
 import {
   UserPlus,
   Link,
