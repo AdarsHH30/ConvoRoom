@@ -1,8 +1,6 @@
 import React from "react";
 
-// Using a more explicit prop type approach
 function MessageSender({ name = "Unknown", isAI = false }) {
-  // Precompute the style classes based on the sender type
   const containerClass = `flex items-center mb-1 ${
     isAI ? "justify-start" : "justify-end"
   }`;

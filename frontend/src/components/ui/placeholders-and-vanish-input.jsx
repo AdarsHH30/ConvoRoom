@@ -117,6 +117,11 @@ export function PlaceholdersAndVanishInput({
   }, [value, draw]);
 
   const animate = (start) => {
+    // Skip animation and just clear immediately
+    setValue("");
+    setAnimating(false);
+
+    // Run animation in background without affecting the input
     const animateFrame = (pos = 0) => {
       requestAnimationFrame(() => {
         const newArr = [];
@@ -152,9 +157,6 @@ export function PlaceholdersAndVanishInput({
         }
         if (newDataRef.current.length > 0) {
           animateFrame(pos - 8);
-        } else {
-          setValue("");
-          setAnimating(false);
         }
       });
     };
@@ -175,11 +177,13 @@ export function PlaceholdersAndVanishInput({
   };
 
   const vanishAndSubmit = () => {
-    // setAnimating(true);
-    draw();
+    const currentValue = inputRef.current?.value || "";
 
-    const value = inputRef.current?.value || "";
-    if (value && inputRef.current) {
+    // Immediately clear the input
+    setValue("");
+
+    if (currentValue && inputRef.current) {
+      draw();
       const maxX = newDataRef.current.reduce(
         (prev, current) => (current.x > prev ? current.x : prev),
         0

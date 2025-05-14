@@ -201,6 +201,7 @@ function ChatUI() {
 
     const messageToSend = inputText;
 
+    // Use flushSync to ensure immediate UI update
     flushSync(() => {
       setInputText("");
     });
@@ -218,7 +219,10 @@ function ChatUI() {
 
     if (!messageTracker.current.has(contentId)) {
       messageTracker.current.add(contentId);
-      setMessages((prev) => [...prev, messageData]);
+      // Use flushSync again to immediately update the UI with the new message
+      flushSync(() => {
+        setMessages((prev) => [...prev, messageData]);
+      });
       scrollToBottom();
     }
 

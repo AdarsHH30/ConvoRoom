@@ -14,7 +14,22 @@ export function ChatInput({
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      if (inputText.trim()) {
+        const messageToSend = inputText;
+        // Clear input text immediately before sending
+        setInputText("");
+        // Then send the message
+        setTimeout(() => sendMessage(), 0);
+      }
+    }
+  };
+
+  const handleSendClick = () => {
+    if (inputText.trim()) {
+      // Clear input text immediately before sending
+      setInputText("");
+      // Then send the message
+      setTimeout(() => sendMessage(), 0);
     }
   };
 
@@ -26,7 +41,10 @@ export function ChatInput({
         <PlaceholdersAndVanishInput
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          onSubmit={sendMessage}
+          onSubmit={(e) => {
+            e.preventDefault();
+            // Don't call sendMessage here as we handle it in keydown and click
+          }}
           onKeyDown={handleKeyDown}
           className={`flex-1 rounded-full text-sm px-4 w-full auto-resize-input ${
             isEmpty ? "max-w-md" : ""
@@ -34,7 +52,7 @@ export function ChatInput({
           disabled={isSending || !isConnected || !username}
         />
         <button
-          onClick={sendMessage}
+          onClick={handleSendClick}
           disabled={!inputText.trim() || isSending || !isConnected || !username}
           className="h-10 w-10 rounded-full bg-black dark:bg-zinc-800 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
         >
