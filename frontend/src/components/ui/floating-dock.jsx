@@ -7,7 +7,6 @@ import {
   useTransform,
 } from "motion/react";
 
-// Helper function to combine class names
 const cn = (...classes) => {
   return classes.filter(Boolean).join(" ");
 };
@@ -113,40 +112,45 @@ function IconContainer({ mouseX, title, icon, href }) {
 
     return val - bounds.x - bounds.width / 2;
   });
+  let widthTransform = useTransform(distance, [-200, 0, 200], [40, 70, 40]);
+  let heightTransform = useTransform(distance, [-200, 0, 200], [40, 70, 40]);
 
-  let widthTransform = useTransform(distance, [-150, 0, 150], [40, 80, 40]);
-  let heightTransform = useTransform(distance, [-150, 0, 150], [40, 80, 40]);
-
-  let widthTransformIcon = useTransform(distance, [-150, 0, 150], [20, 40, 20]);
+  let widthTransformIcon = useTransform(distance, [-200, 0, 200], [20, 45, 20]);
   let heightTransformIcon = useTransform(
     distance,
-    [-150, 0, 150],
-    [20, 40, 20]
+    [-200, 0, 200],
+    [20, 45, 20]
   );
 
   let width = useSpring(widthTransform, {
     mass: 0.1,
-    stiffness: 150,
-    damping: 12,
+    stiffness: 200,
+    damping: 15,
   });
   let height = useSpring(heightTransform, {
     mass: 0.1,
-    stiffness: 150,
-    damping: 12,
+    stiffness: 200,
+    damping: 15,
   });
 
   let widthIcon = useSpring(widthTransformIcon, {
     mass: 0.1,
-    stiffness: 150,
-    damping: 12,
+    stiffness: 200,
+    damping: 15,
   });
   let heightIcon = useSpring(heightTransformIcon, {
     mass: 0.1,
-    stiffness: 150,
-    damping: 12,
+    stiffness: 200,
+    damping: 15,
   });
 
   const [hovered, setHovered] = useState(false);
+
+  const iconScale = useSpring(hovered ? 1.15 : 1, {
+    mass: 0.1,
+    stiffness: 280,
+    damping: 15,
+  });
 
   return (
     <a href={href}>
@@ -155,7 +159,7 @@ function IconContainer({ mouseX, title, icon, href }) {
         style={{ width, height }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        className="aspect-square rounded-full bg-gray-200 dark:bg-neutral-800 flex items-center justify-center relative"
+        className="aspect-square rounded-full bg-gray-200 dark:bg-neutral-800 flex items-center justify-center relative overflow-visible hover:z-10"
       >
         <AnimatePresence>
           {hovered && (
@@ -170,8 +174,13 @@ function IconContainer({ mouseX, title, icon, href }) {
           )}
         </AnimatePresence>
         <motion.div
-          style={{ width: widthIcon, height: heightIcon }}
-          className="flex items-center justify-center"
+          style={{
+            width: widthIcon,
+            height: heightIcon,
+            scale: iconScale,
+            zIndex: hovered ? 20 : 10,
+          }}
+          className="flex items-center justify-center overflow-visible"
         >
           {icon}
         </motion.div>

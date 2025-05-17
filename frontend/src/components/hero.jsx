@@ -20,13 +20,45 @@ export default function Hero() {
   useEffect(() => {
     const loadUserRooms = () => {
       try {
+        console.log("Loading user rooms from localStorage");
         const storedRooms = localStorage.getItem("userRooms");
+        console.log("Stored rooms raw data:", storedRooms);
+
         if (storedRooms) {
           const parsedRooms = JSON.parse(storedRooms);
-          parsedRooms.sort(
+          console.log("Parsed rooms:", parsedRooms);
+
+          // Verify each room has an id
+          const validRooms = parsedRooms.filter((room) => {
+            if (!room || !room.id) {
+              console.warn("Found invalid room entry:", room);
+              return false;
+            }
+            return true;
+          });
+
+          console.log("Valid rooms:", validRooms);
+
+          validRooms.sort(
             (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
           );
-          setUserRooms(parsedRooms);
+
+          // Manually check if any rooms are being set in the state
+          console.log(
+            "Setting user rooms state with",
+            validRooms.length,
+            "rooms"
+          );
+          setUserRooms(validRooms);
+          console.log("User rooms state updated:", validRooms);
+
+          // Force sidebar to open if rooms exist
+          if (validRooms.length > 0) {
+            console.log("Rooms found, forcing sidebar open");
+            setIsSidePanelOpen(true);
+          }
+        } else {
+          console.log("No stored rooms found in localStorage");
         }
       } catch (error) {
         console.error("Error loading user rooms:", error);
@@ -55,10 +87,18 @@ export default function Hero() {
           const existingRooms = JSON.parse(
             localStorage.getItem("userRooms") || "[]"
           );
+          console.log("Before adding new room, existing rooms:", existingRooms);
+
           localStorage.setItem(
             "userRooms",
             JSON.stringify([newRoom, ...existingRooms])
           );
+
+          // Verify the data was saved correctly
+          const verifyRooms = JSON.parse(
+            localStorage.getItem("userRooms") || "[]"
+          );
+          console.log("After adding new room, saved rooms:", verifyRooms);
 
           navigate(`/room/${data.roomId}`);
         }
@@ -102,6 +142,7 @@ export default function Hero() {
           const existingRooms = JSON.parse(
             localStorage.getItem("userRooms") || "[]"
           );
+          console.log("Before joining room, existing rooms:", existingRooms);
 
           if (!existingRooms.some((room) => room.id === roomId)) {
             const newRoom = {
@@ -112,6 +153,14 @@ export default function Hero() {
               "userRooms",
               JSON.stringify([newRoom, ...existingRooms])
             );
+
+            // Verify the data was saved correctly
+            const verifyRooms = JSON.parse(
+              localStorage.getItem("userRooms") || "[]"
+            );
+            console.log("After joining room, saved rooms:", verifyRooms);
+          } else {
+            console.log("Room already exists in history, not adding duplicate");
           }
 
           navigate(`/room/${roomId}`);
@@ -138,6 +187,39 @@ export default function Hero() {
   const navigateToRoom = (roomIdToNavigate) => {
     navigate(`/room/${roomIdToNavigate}`);
   };
+
+  // Add a function to test localStorage is working
+  const testLocalStorage = () => {
+    try {
+      console.log("Testing localStorage functionality...");
+      // Try to set a test value
+      localStorage.setItem("testKey", "testValue");
+      // Try to get the test value
+      const testValue = localStorage.getItem("testKey");
+      console.log("Test read value:", testValue);
+
+      if (testValue === "testValue") {
+        console.log("✅ localStorage is working correctly");
+        return true;
+      } else {
+        console.error(
+          "❌ localStorage not working correctly - didn't read back test value"
+        );
+        return false;
+      }
+    } catch (error) {
+      console.error("❌ localStorage test failed with error:", error);
+      return false;
+    } finally {
+      // Clean up test key
+      localStorage.removeItem("testKey");
+    }
+  };
+
+  // Test localStorage on component mount
+  useEffect(() => {
+    testLocalStorage();
+  }, []);
 
   return (
     <div className="relative min-h-[calc(100vh-100px)] flex items-center justify-center w-full py-4 sm:py-8 px-2 sm:px-4">
@@ -176,11 +258,21 @@ export default function Hero() {
       )}
 
       <div
-        className={`fixed left-0 top-0 h-full w-[280px] bg-gradient-to-b from-[#0a0a0a] to-[#121212] border-r border-green-800/40 z-20 transition-all duration-300 overflow-y-auto shadow-xl ${
+        className={`fixed left-0 top-0 h-full w-[280px] bg-gradient-to-b from-[#0a0a0a] to-[#121212] border-r border-green-800/40 z-20 transition-all duration-300 overflow-y-auto shadow-xl scrollbar-hide ${
           isSidePanelOpen ? "translate-x-0" : "-translate-x-full"
         }`}
+        style={{
+          scrollbarWidth: "none" /* Firefox */,
+          msOverflowStyle: "none" /* IE and Edge */,
+        }}
       >
         <div className="p-6">
+          {/* Add global style to hide webkit scrollbar */}
+          <style jsx global>{`
+            .scrollbar-hide::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-green-700 font-semibold text-lg flex items-center gap-2">
               <History size={20} className="text-green-500" />
