@@ -1,13 +1,13 @@
 "use client";
 import React, { useRef, useEffect } from "react";
 
-export function ChatHeader({ 
-  isConnected, 
-  username, 
-  recentRooms, 
-  showRecentRooms, 
-  setShowRecentRooms, 
-  navigateToRoom 
+export function ChatHeader({
+  isConnected,
+  username,
+  recentRooms,
+  showRecentRooms,
+  setShowRecentRooms,
+  navigateToRoom,
 }) {
   const dropdownRef = useRef(null);
 
@@ -78,8 +78,8 @@ export function ChatHeader({
           </span>
         </div>
         {username && (
-          <div className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-400">
-            You: {username}
+          <div className="text-xs px-2 py-1 rounded-full border border-blue-200 text-blue-800 dark:border-blue-800 dark:text-blue-400 flex items-center gap-1">
+            <span className="font-medium">You:</span> {username}
           </div>
         )}
       </div>

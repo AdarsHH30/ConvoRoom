@@ -108,7 +108,6 @@ export default function Hero() {
       .then((response) => response.json())
       .then((data) => {
         if (data.message) {
-          // Save room to localStorage only if it doesn't exist
           const existingRooms = JSON.parse(
             localStorage.getItem("userRooms") || "[]"
           );
@@ -269,7 +268,7 @@ export default function Hero() {
           >
             <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 sm:mb-3 md:mb-4 leading-tight">
               Connecting team with AI
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-100 block sm:inline">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-800 block sm:inline">
                 {" "}
                 ConvoRoom
               </span>
