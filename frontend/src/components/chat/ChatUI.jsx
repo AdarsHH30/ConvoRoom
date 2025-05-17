@@ -42,6 +42,20 @@ function ChatUI() {
   useEffect(() => {
     const fetchChatHistory = async () => {
       try {
+        const userRooms = JSON.parse(localStorage.getItem("userRooms") || "[]");
+        const thisRoom = userRooms.find((room) => room.id === roomId);
+
+        if (thisRoom) {
+          const creationTime = new Date(thisRoom.timestamp).getTime();
+          const now = new Date().getTime();
+          const isNewRoom = now - creationTime < 2000;
+
+          if (isNewRoom) {
+            // console.log("Skipping history fetch for new room");
+            return;
+          }
+        }
+
         const response = await fetch(
           `${BACKEND_URL}api/chat_history/${roomId}/`
         );

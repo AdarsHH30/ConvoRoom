@@ -23,7 +23,7 @@ function ChatUI() {
   const wsRef = useRef(null);
   const messageTracker = useRef(new Set());
   const roomId = window.location.pathname.split("/").pop();
-  // const roomName = `Room ${roomId}`; // Unused variable
+  // const roomName = `Room ${roomId}`;
 
   useEffect(() => {
     const { username: storedUsername } = getUserIdentity();
@@ -109,6 +109,19 @@ function ChatUI() {
   useEffect(() => {
     const fetchChatHistory = async () => {
       try {
+        const userRooms = JSON.parse(localStorage.getItem("userRooms") || "[]");
+        const thisRoom = userRooms.find((room) => room.id === roomId);
+        if (thisRoom) {
+          const creationTime = new Date(thisRoom.timestamp).getTime();
+          const now = new Date().getTime();
+          const isNewRoom = now - creationTime < 2000;
+
+          if (isNewRoom) {
+            // console.log("Skipping history fetch for new room");
+            return;
+          }
+        }
+
         const response = await fetch(
           `${BACKEND_URL}api/get_chat_history/${roomId}/`
         );
@@ -137,8 +150,10 @@ function ChatUI() {
       }
     };
 
-    fetchChatHistory();
-  }, [roomId]);
+    if (roomId && username) {
+      fetchChatHistory();
+    }
+  }, [roomId, username, extractLanguage, parseMessageContent]);
 
   const handleWebSocketMessage = useCallback(
     (event) => {
