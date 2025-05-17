@@ -37,8 +37,8 @@ export function ChatHeader({
             onClick={() => setShowRecentRooms(!showRecentRooms)}
           >
             <img
-              src="/public/vite.svg"
-              alt="Vite logo"
+              src="/vite.svg"
+              alt="Convoroom logo"
               className="w-5 h-5 mr-2"
             />
             ConvoRoom{" "}
