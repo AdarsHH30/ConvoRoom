@@ -185,15 +185,39 @@ function ChatUI() {
   useEffect(() => {
     if (!username) return;
 
-    const ws = new WebSocket(`${VITE_WS_API}ws/room/${roomId}/`);
+    console.log(
+      `Attempting to connect to WebSocket at: ${VITE_WS_API}ws/room/${roomId}/`
+    );
+
+    let wsUrl = VITE_WS_API;
+    if (!wsUrl.endsWith("/")) wsUrl += "/";
+
+    const ws = new WebSocket(`${wsUrl}ws/room/${roomId}/`);
     wsRef.current = ws;
 
-    ws.onopen = () => setIsConnected(true);
-    ws.onmessage = handleWebSocketMessage;
-    ws.onerror = () => setIsConnected(false);
-    ws.onclose = () => setIsConnected(false);
+    ws.onopen = () => {
+      console.log("WebSocket connection established successfully");
+      setIsConnected(true);
+    };
 
-    return () => ws.close(1000, "Component unmounted");
+    ws.onmessage = handleWebSocketMessage;
+
+    ws.onerror = (error) => {
+      console.error("WebSocket connection error:", error);
+      setIsConnected(false);
+    };
+
+    ws.onclose = (event) => {
+      console.log(
+        `WebSocket connection closed with code: ${event.code}, reason: ${event.reason}`
+      );
+      setIsConnected(false);
+    };
+
+    return () => {
+      console.log("Closing WebSocket connection");
+      ws.close(1000, "Component unmounted");
+    };
   }, [roomId, handleWebSocketMessage, username]);
 
   const sendMessage = useCallback(async () => {
@@ -201,7 +225,6 @@ function ChatUI() {
 
     const messageToSend = inputText;
 
-    // Use flushSync to ensure immediate UI update
     flushSync(() => {
       setInputText("");
     });
@@ -219,7 +242,6 @@ function ChatUI() {
 
     if (!messageTracker.current.has(contentId)) {
       messageTracker.current.add(contentId);
-      // Use flushSync again to immediately update the UI with the new message
       flushSync(() => {
         setMessages((prev) => [...prev, messageData]);
       });
