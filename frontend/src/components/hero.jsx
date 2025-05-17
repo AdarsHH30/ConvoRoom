@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { CirclePlus, UsersRound, ChevronRight, History, X } from "lucide-react";
+import { CirclePlus, UsersRound, History, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
@@ -141,29 +141,39 @@ export default function Hero() {
 
   return (
     <div className="relative min-h-[calc(100vh-100px)] flex items-center justify-center w-full py-4 sm:py-8 px-2 sm:px-4">
-      <div className="group relative">
-        <button
-          onClick={() => setIsSidePanelOpen(!isSidePanelOpen)}
-          className={`fixed left-0 top-1/2 transform -translate-y-1/2 z-30 bg-green-800/30 hover:bg-green-700/50 text-white p-4 rounded-full transition-all duration-300 shadow-lg border border-green-600/40 backdrop-blur-sm ${
-            isSidePanelOpen ? "left-[280px]" : "left-3"
-          }`}
-          aria-label="Toggle history panel"
-        >
-          <ChevronRight
-            size={24}
-            className={`transition-transform duration-300 ${
-              isSidePanelOpen ? "rotate-180" : ""
-            }`}
-          />
-        </button>
-        <div
-          className={`absolute left-14 top-1/2 transform -translate-y-1/2 whitespace-nowrap bg-green-800/80 text-white text-sm py-1.5 px-3 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none ${
-            isSidePanelOpen ? "hidden" : ""
-          }`}
-        >
-          Past rooms
+      {!isSidePanelOpen && (
+        <div className="fixed top-4 left-4 z-30 group">
+          <button
+            onClick={() => setIsSidePanelOpen(true)}
+            className="p-2 rounded-md transition-all duration-300"
+            aria-label="Toggle history panel"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <rect
+                x="4"
+                y="4"
+                width="16"
+                height="16"
+                rx="2"
+                stroke="white"
+                strokeWidth="2"
+              />
+              <rect x="8" y="4" width="4" height="16" fill="white" />
+            </svg>
+          </button>
+
+          {/* Tooltip that appears on hover */}
+          <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-zinc-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
+            Recent Rooms
+          </div>
         </div>
-      </div>
+      )}
 
       <div
         className={`fixed left-0 top-0 h-full w-[280px] bg-gradient-to-b from-[#0a0a0a] to-[#121212] border-r border-green-800/40 z-20 transition-all duration-300 overflow-y-auto shadow-xl ${
@@ -172,9 +182,9 @@ export default function Hero() {
       >
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-green-400 font-semibold text-lg flex items-center gap-2">
+            <h3 className="text-green-700 font-semibold text-lg flex items-center gap-2">
               <History size={20} className="text-green-500" />
-              Your Rooms
+              Past Rooms
             </h3>
             <button
               onClick={() => setIsSidePanelOpen(false)}
@@ -185,48 +195,23 @@ export default function Hero() {
           </div>
 
           {userRooms && userRooms.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {userRooms.map((room) => (
                 <div
                   key={room.id}
                   onClick={() => navigateToRoom(room.id)}
-                  className="p-4 rounded-lg bg-green-900/10 border border-green-800/30 cursor-pointer hover:bg-green-800/20 transition-all hover:shadow-md group"
+                  className="py-3 px-3 rounded-md cursor-pointer hover:bg-zinc-800/70 transition-all text-gray-300 truncate"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="bg-green-800/30 p-2 rounded-md group-hover:bg-green-800/50 transition-colors">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="text-green-400"
-                      >
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-medium text-white truncate group-hover:text-green-300 transition-colors">
-                        {room.id}
-                      </div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        {new Date(room.timestamp).toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
+                  {room.id}
                 </div>
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center p-8 text-center bg-green-900/5 rounded-lg border border-green-800/20">
+            <div className="flex flex-col items-center justify-center text-center p-6">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="40"
-                height="40"
+                width="24"
+                height="24"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
