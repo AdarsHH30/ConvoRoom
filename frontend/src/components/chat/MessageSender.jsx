@@ -1,11 +1,8 @@
 import React, { useMemo } from "react";
 
 function MessageSender({ name = "Unknown", isAI = false }) {
-  // Get initials for the avatar - take first two letters of the name
   const getInitials = (name) => {
     if (!name || name === "Unknown") return "U";
-
-    // Remove any non-word characters and get first 2 characters
     return name
       .replace(/[^\w\s]/gi, "")
       .trim()
@@ -13,21 +10,18 @@ function MessageSender({ name = "Unknown", isAI = false }) {
       .toUpperCase();
   };
 
-  // Generate a deterministic color based on the username
   const getUserColor = useMemo(() => {
     if (isAI) return null;
 
-    // Simple hash function to generate a number from a string
     const hashCode = (str) => {
       let hash = 0;
       for (let i = 0; i < str.length; i++) {
         hash = (hash << 5) - hash + str.charCodeAt(i);
-        hash = hash & hash; // Convert to 32bit integer
+        hash = hash & hash;
       }
       return Math.abs(hash);
     };
 
-    // Use a set of predefined professional colors
     const colors = [
       "bg-blue-600",
       "bg-green-600",

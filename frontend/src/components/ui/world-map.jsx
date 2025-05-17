@@ -1,10 +1,13 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import DottedMap from "dotted-map";
-import Image from "react-image";
-
-import { useTheme } from "next-themes";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  motion,
+  useAnimation,
+  useMotionValue,
+  useTransform,
+} from "framer-motion";
+import { cn } from "@/lib/utils";
+import { Globe } from "@/components/ui/globe";
 
 export default function WorldMap({ dots = [], lineColor = "#0ea5e9" }) {
   const svgRef = useRef(null);

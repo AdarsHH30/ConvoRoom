@@ -32,112 +32,46 @@ function ChatUI() {
 
   useEffect(() => {
     const loadRecentRooms = () => {
-      const rooms = JSON.parse(localStorage.getItem("recentRooms")) || [];
-      setRecentRooms(rooms);
+      const currentRooms =
+        JSON.parse(localStorage.getItem("recentRooms")) || [];
+      setRecentRooms(currentRooms.filter((room) => room.id !== roomId));
     };
-
     loadRecentRooms();
-  }, []);
-
-  useEffect(() => {
-    const saveRoomToRecent = () => {
-      let rooms = JSON.parse(localStorage.getItem("recentRooms")) || [];
-      rooms = rooms.filter((room) => room.id !== roomId);
-      rooms.unshift({ id: roomId, name: roomName });
-      if (rooms.length > 5) {
-        rooms.pop();
-      }
-      localStorage.setItem("recentRooms", JSON.stringify(rooms));
-      setRecentRooms(rooms);
-    };
-
-    if (roomId) {
-      saveRoomToRecent();
-    }
-  }, [roomId, roomName]);
-
-  const navigateToRoom = (roomId) => {
-    window.location.href = `/room/${roomId}`;
-  };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    setShowScrollButton(false);
-  };
-
-  const extractLanguage = (text) => {
-    if (!text.startsWith("```")) return null;
-    const firstLine = text.split("\n")[0];
-    return firstLine.slice(3).trim() || null;
-  };
-
-  const parseMessageContent = (text) => {
-    if (!text) return [{ type: "text", content: "" }];
-
-    const regex = /```([\w]*)\n([\s\S]*?)\n```/g;
-    const parts = [];
-    let lastIndex = 0;
-    let match;
-
-    while ((match = regex.exec(text)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push({
-          type: "text",
-          content: text.substring(lastIndex, match.index),
-        });
-      }
-
-      parts.push({
-        type: "code",
-        language: match[1] || "jsx",
-        content: match[2],
-      });
-
-      lastIndex = match.index + match[0].length;
-    }
-
-    if (lastIndex < text.length) {
-      parts.push({
-        type: "text",
-        content: text.substring(lastIndex),
-      });
-    }
-
-    return parts.length > 0 ? parts : [{ type: "text", content: text }];
-  };
+  }, [roomId]);
 
   useEffect(() => {
     const fetchChatHistory = async () => {
       try {
         const response = await fetch(
-          `${BACKEND_URL}api/get_chat_history/${roomId}/`
+          `${BACKEND_URL}api/chat_history/${roomId}/`
         );
-        if (!response.ok) throw new Error("Failed to fetch chat history");
-
+        if (!response.ok) {
+          return;
+        }
         const data = await response.json();
-
-        const formattedMessages = data.messages.map((msg) => ({
-          id: `${msg.sender}-${msg.timestamp}`,
+        const formattedMessages = data.map((msg) => ({
+          id: msg.id,
           sender: msg.sender,
-          text: msg.message,
+          text: msg.text,
           timestamp: msg.timestamp,
           isCode:
             msg.sender === "AI" &&
-            msg.message.startsWith("```") &&
-            msg.message.endsWith("```"),
-          language: msg.sender === "AI" ? extractLanguage(msg.message) : null,
-          hasCodeBlocks: msg.sender === "AI" && msg.message.includes("```"),
+            msg.text.startsWith("```") &&
+            msg.text.endsWith("```"),
+          language: msg.sender === "AI" ? extractLanguage(msg.text) : null,
+          hasCodeBlocks: msg.sender === "AI" && msg.text.includes("```"),
           parsedContent:
-            msg.sender === "AI" ? parseMessageContent(msg.message) : null,
+            msg.sender === "AI" ? parseMessageContent(msg.text) : null,
         }));
-
         setMessages(formattedMessages);
       } catch (error) {
         console.error("Error fetching chat history:", error);
       }
     };
 
-    fetchChatHistory();
+    if (roomId && username) {
+      fetchChatHistory();
+    }
   }, [roomId, username]);
 
   const handleWebSocketMessage = useCallback(
@@ -185,10 +119,6 @@ function ChatUI() {
   useEffect(() => {
     if (!username) return;
 
-    console.log(
-      `Attempting to connect to WebSocket at: ${VITE_WS_API}ws/room/${roomId}/`
-    );
-
     let wsUrl = VITE_WS_API;
     if (!wsUrl.endsWith("/")) wsUrl += "/";
 
@@ -196,27 +126,21 @@ function ChatUI() {
     wsRef.current = ws;
 
     ws.onopen = () => {
-      console.log("WebSocket connection established successfully");
       setIsConnected(true);
     };
-
     ws.onmessage = handleWebSocketMessage;
-
     ws.onerror = (error) => {
       console.error("WebSocket connection error:", error);
       setIsConnected(false);
     };
-
     ws.onclose = (event) => {
-      console.log(
-        `WebSocket connection closed with code: ${event.code}, reason: ${event.reason}`
-      );
       setIsConnected(false);
     };
 
     return () => {
-      console.log("Closing WebSocket connection");
-      ws.close(1000, "Component unmounted");
+      if (wsRef.current) {
+        wsRef.current.close(1000, "Component unmounted");
+      }
     };
   }, [roomId, handleWebSocketMessage, username]);
 
@@ -238,6 +162,8 @@ function ChatUI() {
       text: messageToSend,
       timestamp: new Date().toISOString(),
       isCode: false,
+      hasCodeBlocks: false,
+      parsedContent: null,
     };
 
     if (!messageTracker.current.has(contentId)) {
@@ -272,8 +198,8 @@ function ChatUI() {
 
       if (!response.ok) throw new Error("API response not OK");
 
-      const data = await response.json();
-      const aiResponse = data?.response;
+      const apiData = await response.json();
+      const aiResponse = apiData?.response;
 
       setIsTyping(false);
 
@@ -319,8 +245,42 @@ function ChatUI() {
 
     setTimeout(() => {
       toast.classList.add("animate-fade-out");
-      setTimeout(() => document.body.removeChild(toast), 300);
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast);
+        }
+      }, 300);
     }, 1500);
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const extractLanguage = (messageText) => {
+    const match = messageText.match(/^```(\w*)\n/);
+    return match ? match[1] : null;
+  };
+
+  const parseMessageContent = (messageText) => {
+    if (messageText.includes("```")) {
+      const parts = messageText.split(/(```[\w]*\n[\s\S]*?\n```)/g);
+      return parts
+        .map((part) => {
+          if (part.startsWith("```")) {
+            const langMatch = part.match(/^```(\w*)\n/);
+            const codeContent = part.replace(/^```[\w]*\n|\n```$/g, "");
+            return {
+              type: "code",
+              content: codeContent,
+              language: langMatch ? langMatch[1] : "plaintext",
+            };
+          }
+          return { type: "text", content: part };
+        })
+        .filter((part) => part.content.trim() !== "");
+    }
+    return [{ type: "text", content: messageText }];
   };
 
   return (
@@ -332,7 +292,7 @@ function ChatUI() {
           recentRooms={recentRooms}
           showRecentRooms={showRecentRooms}
           setShowRecentRooms={setShowRecentRooms}
-          navigateToRoom={navigateToRoom}
+          navigateToRoom={(id) => (window.location.pathname = `/room/${id}`)}
         />
 
         <MessageList

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { cn } from "@/lib/utils";
 
 // Custom hook for mouse position
 function useMousePosition() {

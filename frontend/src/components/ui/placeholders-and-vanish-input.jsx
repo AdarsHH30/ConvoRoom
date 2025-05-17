@@ -117,11 +117,9 @@ export function PlaceholdersAndVanishInput({
   }, [value, draw]);
 
   const animate = (start) => {
-    // Skip animation and just clear immediately
     setValue("");
     setAnimating(false);
 
-    // Run animation in background without affecting the input
     const animateFrame = (pos = 0) => {
       requestAnimationFrame(() => {
         const newArr = [];
@@ -179,7 +177,6 @@ export function PlaceholdersAndVanishInput({
   const vanishAndSubmit = () => {
     const currentValue = inputRef.current?.value || "";
 
-    // Immediately clear the input
     setValue("");
 
     if (currentValue && inputRef.current) {

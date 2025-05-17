@@ -1,5 +1,6 @@
 "use client";
 import React, { useRef, useEffect } from "react";
+import { ChevronLeft } from "lucide-react";
 
 export function ChatHeader({
   isConnected,
@@ -29,36 +30,20 @@ export function ChatHeader({
 
   return (
     <div className="p-3 bg-[var(--primary)] rounded-t-lg flex justify-between items-center">
-      <div className="flex flex-col relative">
-        <h2
-          className="text-lg font-bold text-[var(--background)] cursor-pointer"
-          onClick={() => setShowRecentRooms(!showRecentRooms)}
-        >
-          ConvoRoom <span className="ml-2 text-xs opacity-70">↓</span>
-        </h2>
-        {showRecentRooms && recentRooms.length > 0 && (
-          <div
-            ref={dropdownRef}
-            className="absolute top-full left-0 mt-1 bg-white dark:bg-zinc-800 rounded-md shadow-lg z-10 w-48"
+      <div className="flex items-center space-x-3">
+        <div className="flex flex-col relative">
+          <h2
+            className="text-lg font-bold text-[var(--background)] cursor-pointer flex items-center"
+            onClick={() => setShowRecentRooms(!showRecentRooms)}
           >
-            <ul className="py-1">
-              <li className="px-3 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 border-b">
-                Recent Rooms
-              </li>
-              {recentRooms.map((room) => (
-                <li
-                  key={room.id}
-                  className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-zinc-700 cursor-pointer text-sm flex items-center"
-                  onClick={() => navigateToRoom(room.id)}
-                >
-                  <span className="w-full truncate">
-                    {room.name} (#{room.id})
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+            <img
+              src="/public/vite.svg"
+              alt="Vite logo"
+              className="w-5 h-5 mr-2"
+            />
+            ConvoRoom{" "}
+          </h2>
+        </div>
       </div>
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-1">

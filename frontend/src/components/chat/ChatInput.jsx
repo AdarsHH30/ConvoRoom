@@ -16,9 +16,7 @@ export function ChatInput({
       e.preventDefault();
       if (inputText.trim()) {
         const messageToSend = inputText;
-        // Clear input text immediately before sending
         setInputText("");
-        // Then send the message
         setTimeout(() => sendMessage(), 0);
       }
     }
@@ -26,9 +24,7 @@ export function ChatInput({
 
   const handleSendClick = () => {
     if (inputText.trim()) {
-      // Clear input text immediately before sending
       setInputText("");
-      // Then send the message
       setTimeout(() => sendMessage(), 0);
     }
   };
@@ -43,7 +39,6 @@ export function ChatInput({
           onChange={(e) => setInputText(e.target.value)}
           onSubmit={(e) => {
             e.preventDefault();
-            // Don't call sendMessage here as we handle it in keydown and click
           }}
           onKeyDown={handleKeyDown}
           className={`flex-1 rounded-full text-sm px-4 w-full auto-resize-input ${

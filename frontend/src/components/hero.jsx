@@ -2,15 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import {
-  CirclePlus,
-  UsersRound,
-  ChevronRight,
-  History,
-  X,
-  ChevronLeft,
-} from "lucide-react";
-import { FloatingPaper } from "@/components/floating-paper";
+import { CirclePlus, UsersRound, ChevronRight, History, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
@@ -25,7 +17,6 @@ export default function Hero() {
 
   const navigate = useNavigate();
 
-  // Load user rooms from localStorage
   useEffect(() => {
     const loadUserRooms = () => {
       try {
@@ -144,8 +135,8 @@ export default function Hero() {
     }
   };
 
-  const navigateToRoom = (roomId) => {
-    navigate(`/room/${roomId}`);
+  const navigateToRoom = (roomIdToNavigate) => {
+    navigate(`/room/${roomIdToNavigate}`);
   };
 
   return (
@@ -257,7 +248,6 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Main content */}
       <div className="container mx-auto relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div

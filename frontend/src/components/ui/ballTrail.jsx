@@ -12,7 +12,6 @@ export default function BallTrail() {
     const numBalls = 30;
     const balls = [];
 
-    // Create balls
     for (let i = 0; i < numBalls; i++) {
       const ball = document.createElement("div");
       ball.classList.add("ball");

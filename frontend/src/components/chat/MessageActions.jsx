@@ -11,9 +11,7 @@ export function MessageActions({ message, copyToClipboard }) {
       onMouseLeave={() => setShowActions(false)}
     >
       {(showActions || window.innerWidth < 768) && message.sender === "AI" && (
-        <div className="absolute -top-8 right-0 flex space-x-2 bg-white dark:bg-zinc-800 p-1 rounded-md shadow-md z-10">
-          {/* Actions would go here */}
-        </div>
+        <div className="absolute -top-8 right-0 flex space-x-2 bg-white dark:bg-zinc-800 p-1 rounded-md shadow-md z-10"></div>
       )}
     </div>
   );

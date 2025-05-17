@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { FileText, BotIcon, Earth } from "lucide-react";
+import { Earth } from "lucide-react";
 
 export function FloatingPaper({ count = 5 }) {
   const [dimensions, setDimensions] = useState({ width: 1200, height: 800 });
 
   useEffect(() => {
-    // Update dimensions only on client side
     setDimensions({
       width: window.innerWidth,
       height: window.innerHeight,

@@ -13,7 +13,13 @@ const FetchRoomId = () => {
       setIsLoading(true);
       try {
         const response = await fetch(
-          "http://localhost:8000/api/generateRoomId/"
+          `${process.env.VITE_BACKEND_URL}/api/room/generate`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
         );
         if (!response.ok) {
           throw new Error("Failed to fetch room ID");
@@ -35,22 +41,19 @@ const FetchRoomId = () => {
   const handleCopyInvite = () => {
     if (!roomId) return;
 
-    // Create the invitation link
     const inviteLink = `${window.location.origin}/chat/${roomId}`;
 
-    // Copy to clipboard
     navigator.clipboard
       .writeText(inviteLink)
       .then(() => {
         setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000); // Reset copied state after 2 seconds
+        setTimeout(() => setIsCopied(false), 2000);
       })
       .catch((err) => {
         console.error("Failed to copy: ", err);
       });
   };
 
-  // Generate a URL for the current room
   const inviteUrl = roomId ? `${window.location.origin}/chat/${roomId}` : "";
 
   return (

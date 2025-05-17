@@ -3,9 +3,6 @@ import { FloatingDock } from "@/components/ui/floating-dock";
 import {
   IconBrandGithub,
   IconBrandX,
-  IconExchange,
-  IconHome,
-  IconNewSection,
   IconBrandLinkedin,
   IconTerminal2,
 } from "@tabler/icons-react";
@@ -33,14 +30,6 @@ export function Footer() {
       ),
       href: "https://www.adarshhegde.tech/",
     },
-    // {
-    //   title: "Changelog",
-    //   icon: (
-    //     <IconExchange className="h-full w-full text-neutral-500 dark:text-neutral-300" />
-    //   ),
-    //   href: "#",
-    // },
-
     {
       title: "Twitter",
       icon: (

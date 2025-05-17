@@ -23,7 +23,7 @@ function ChatUI() {
   const wsRef = useRef(null);
   const messageTracker = useRef(new Set());
   const roomId = window.location.pathname.split("/").pop();
-  const roomName = `Room ${roomId}`;
+  // const roomName = `Room ${roomId}`; // Unused variable
 
   useEffect(() => {
     const { username: storedUsername } = getUserIdentity();
@@ -43,7 +43,7 @@ function ChatUI() {
     const saveRoomToRecent = () => {
       let rooms = JSON.parse(localStorage.getItem("recentRooms")) || [];
       rooms = rooms.filter((room) => room.id !== roomId);
-      rooms.unshift({ id: roomId, name: roomName });
+      rooms.unshift({ id: roomId, name: `Room ${roomId}` });
       if (rooms.length > 5) {
         rooms.pop();
       }
@@ -54,10 +54,10 @@ function ChatUI() {
     if (roomId) {
       saveRoomToRecent();
     }
-  }, [roomId, roomName]);
+  }, [roomId]);
 
-  const navigateToRoom = (roomId) => {
-    window.location.href = `/room/${roomId}`;
+  const navigateToRoom = (roomIdToNavigate) => {
+    window.location.href = `/room/${roomIdToNavigate}`;
   };
 
   const scrollToBottom = () => {
@@ -179,7 +179,7 @@ function ChatUI() {
         console.error("WebSocket message parsing error:", error);
       }
     },
-    [showScrollButton]
+    [showScrollButton, extractLanguage, parseMessageContent, scrollToBottom]
   );
 
   useEffect(() => {
@@ -193,7 +193,11 @@ function ChatUI() {
     ws.onerror = () => setIsConnected(false);
     ws.onclose = () => setIsConnected(false);
 
-    return () => ws.close(1000, "Component unmounted");
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close(1000, "Component unmounted");
+      }
+    };
   }, [roomId, handleWebSocketMessage, username]);
 
   const sendMessage = useCallback(async () => {
@@ -279,7 +283,16 @@ function ChatUI() {
     } finally {
       setIsSending(false);
     }
-  }, [inputText, isSending, isConnected, roomId, username]);
+  }, [
+    inputText,
+    isSending,
+    isConnected,
+    roomId,
+    username,
+    extractLanguage,
+    parseMessageContent,
+    scrollToBottom,
+  ]);
 
   const copyToClipboard = (text) => {
     const cleanedText = text.replace(/^```[\w]*\n|\n```$/g, "");
@@ -293,7 +306,11 @@ function ChatUI() {
 
     setTimeout(() => {
       toast.classList.add("animate-fade-out");
-      setTimeout(() => document.body.removeChild(toast), 300);
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast);
+        }
+      }, 300);
     }, 1500);
   };
 
