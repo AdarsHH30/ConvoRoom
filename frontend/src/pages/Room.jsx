@@ -19,7 +19,7 @@ const Room = () => {
 
   const handleCopyInvite = () => {
     if (!roomId) {
-      console.error("No room ID found!");
+      //console.error("No room ID found!");
       return;
     }
 
@@ -34,7 +34,7 @@ const Room = () => {
 
   const handleCopyLink = () => {
     if (!roomId) {
-      console.error("No room ID found!");
+      //console.error("No room ID found!");
       return;
     }
     navigator.clipboard

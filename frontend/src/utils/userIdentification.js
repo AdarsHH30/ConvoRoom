@@ -1,4 +1,3 @@
-
 const generateRandomUsername = () => {
   const adjectives = ['Happy', 'Clever', 'Brave', 'Curious', 'Gentle', 'Witty', 'Calm', 'Lively', 
                       'Bright', 'Bold', 'Kind', 'Smart', 'Quick', 'Wise', 'Proud'];
@@ -16,7 +15,14 @@ export const getUserIdentity = () => {
   
   if (!username) {
     username = generateRandomUsername();
+    while (localStorage.getItem(username)) {
+      username = generateRandomUsername();
+    }
+    localStorage.setItem(username, true);
     localStorage.setItem('convoroom_username', username);
+    //console.log('Created new username:', username);
+  } else {
+    //console.log('Found existing username:', username);
   }
   
   return { username };

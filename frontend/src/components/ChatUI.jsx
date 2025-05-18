@@ -18,17 +18,15 @@ function ChatUI() {
   const [recentRooms, setRecentRooms] = useState([]);
   const [showRecentRooms, setShowRecentRooms] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(() => {
+    // Get username from localStorage or use "User" as fallback
+    return localStorage.getItem("username") || "User";
+  });
   const messagesEndRef = useRef(null);
   const wsRef = useRef(null);
   const messageTracker = useRef(new Set());
   const roomId = window.location.pathname.split("/").pop();
   // const roomName = `Room ${roomId}`;
-
-  useEffect(() => {
-    const { username: storedUsername } = getUserIdentity();
-    setUsername(storedUsername);
-  }, []);
 
   useEffect(() => {
     const loadRecentRooms = () => {
@@ -117,7 +115,7 @@ function ChatUI() {
           const isNewRoom = now - creationTime < 2000;
 
           if (isNewRoom) {
-            // console.log("Skipping history fetch for new room");
+            //console.log("Skipping history fetch for new room");
             return;
           }
         }
@@ -146,7 +144,7 @@ function ChatUI() {
 
         setMessages(formattedMessages);
       } catch (error) {
-        console.error("Error fetching chat history:", error);
+        //console.error("Error fetching chat history:", error);
       }
     };
 
@@ -191,7 +189,7 @@ function ChatUI() {
           scrollToBottom();
         }
       } catch (error) {
-        console.error("WebSocket message parsing error:", error);
+        //console.error("WebSocket message parsing error:", error);
       }
     },
     [showScrollButton, extractLanguage, parseMessageContent, scrollToBottom]
@@ -292,7 +290,7 @@ function ChatUI() {
         }
       }
     } catch (error) {
-      console.error("Message sending failed:", error);
+      //console.error("Message sending failed:", error);
       setMessages((prev) => prev.filter((msg) => msg.id !== messageData.id));
       setIsTyping(false);
     } finally {
@@ -328,6 +326,21 @@ function ChatUI() {
       }, 300);
     }, 1500);
   };
+
+  useEffect(() => {
+    // Check if username exists in localStorage
+    const storedUsername = localStorage.getItem("username");
+
+    // If no username found, prompt the user and store it
+    if (!storedUsername) {
+      const newUsername = prompt("Please enter your username:", "User");
+      if (newUsername && newUsername.trim()) {
+        localStorage.setItem("username", newUsername.trim());
+      } else {
+        localStorage.setItem("username", "User");
+      }
+    }
+  }, []);
 
   return (
     <div className="w-full max-w-5xl mx-auto p-2 md:p-4 h-[90vh] flex flex-col">

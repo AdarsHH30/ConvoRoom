@@ -20,48 +20,30 @@ export default function Hero() {
   useEffect(() => {
     const loadUserRooms = () => {
       try {
-        console.log("Loading user rooms from localStorage");
         const storedRooms = localStorage.getItem("userRooms");
-        console.log("Stored rooms raw data:", storedRooms);
 
         if (storedRooms) {
           const parsedRooms = JSON.parse(storedRooms);
-          console.log("Parsed rooms:", parsedRooms);
 
-          // Verify each room has an id
           const validRooms = parsedRooms.filter((room) => {
             if (!room || !room.id) {
-              console.warn("Found invalid room entry:", room);
               return false;
             }
             return true;
           });
 
-          console.log("Valid rooms:", validRooms);
-
           validRooms.sort(
             (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
           );
 
-          // Manually check if any rooms are being set in the state
-          console.log(
-            "Setting user rooms state with",
-            validRooms.length,
-            "rooms"
-          );
           setUserRooms(validRooms);
-          console.log("User rooms state updated:", validRooms);
 
-          // Force sidebar to open if rooms exist
           if (validRooms.length > 0) {
-            console.log("Rooms found, forcing sidebar open");
             setIsSidePanelOpen(true);
           }
-        } else {
-          console.log("No stored rooms found in localStorage");
         }
       } catch (error) {
-        console.error("Error loading user rooms:", error);
+        //console.error("Error loading user rooms:", error);
       }
     };
 
@@ -87,24 +69,17 @@ export default function Hero() {
           const existingRooms = JSON.parse(
             localStorage.getItem("userRooms") || "[]"
           );
-          console.log("Before adding new room, existing rooms:", existingRooms);
 
           localStorage.setItem(
             "userRooms",
             JSON.stringify([newRoom, ...existingRooms])
           );
 
-          // Verify the data was saved correctly
-          const verifyRooms = JSON.parse(
-            localStorage.getItem("userRooms") || "[]"
-          );
-          console.log("After adding new room, saved rooms:", verifyRooms);
-
           navigate(`/room/${data.roomId}`);
         }
       })
       .catch((error) => {
-        console.error("Error:", error);
+        //console.error("Error:", error);
         setErrorMessage("Something went wrong. Please try again.");
         setIsLoading(false);
       });
@@ -142,7 +117,6 @@ export default function Hero() {
           const existingRooms = JSON.parse(
             localStorage.getItem("userRooms") || "[]"
           );
-          console.log("Before joining room, existing rooms:", existingRooms);
 
           if (!existingRooms.some((room) => room.id === roomId)) {
             const newRoom = {
@@ -153,14 +127,6 @@ export default function Hero() {
               "userRooms",
               JSON.stringify([newRoom, ...existingRooms])
             );
-
-            // Verify the data was saved correctly
-            const verifyRooms = JSON.parse(
-              localStorage.getItem("userRooms") || "[]"
-            );
-            console.log("After joining room, saved rooms:", verifyRooms);
-          } else {
-            console.log("Room already exists in history, not adding duplicate");
           }
 
           navigate(`/room/${roomId}`);
@@ -172,7 +138,7 @@ export default function Hero() {
         }
       })
       .catch((error) => {
-        console.error("Error:", error);
+        //console.error("Error:", error);
         setErrorMessage("Connection error. Please try again.");
         setIsLoading(false);
       });
@@ -188,35 +154,23 @@ export default function Hero() {
     navigate(`/room/${roomIdToNavigate}`);
   };
 
-  // Add a function to test localStorage is working
   const testLocalStorage = () => {
     try {
-      console.log("Testing localStorage functionality...");
-      // Try to set a test value
       localStorage.setItem("testKey", "testValue");
-      // Try to get the test value
       const testValue = localStorage.getItem("testKey");
-      console.log("Test read value:", testValue);
 
       if (testValue === "testValue") {
-        console.log("✅ localStorage is working correctly");
         return true;
       } else {
-        console.error(
-          "❌ localStorage not working correctly - didn't read back test value"
-        );
         return false;
       }
     } catch (error) {
-      console.error("❌ localStorage test failed with error:", error);
       return false;
     } finally {
-      // Clean up test key
       localStorage.removeItem("testKey");
     }
   };
 
-  // Test localStorage on component mount
   useEffect(() => {
     testLocalStorage();
   }, []);
@@ -250,7 +204,6 @@ export default function Hero() {
             </svg>
           </button>
 
-          {/* Tooltip that appears on hover */}
           <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-zinc-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
             Recent Rooms
           </div>
@@ -262,12 +215,11 @@ export default function Hero() {
           isSidePanelOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         style={{
-          scrollbarWidth: "none" /* Firefox */,
-          msOverflowStyle: "none" /* IE and Edge */,
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
         }}
       >
         <div className="p-6">
-          {/* Add global style to hide webkit scrollbar */}
           <style jsx global>{`
             .scrollbar-hide::-webkit-scrollbar {
               display: none;
@@ -336,7 +288,6 @@ export default function Hero() {
             <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 sm:mb-3 md:mb-4 leading-tight">
               Connecting team with AI
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-800 block sm:inline">
-                {" "}
                 ConvoRoom
               </span>
             </h1>

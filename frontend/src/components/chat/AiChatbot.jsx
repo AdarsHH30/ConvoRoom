@@ -21,7 +21,7 @@ function Chat() {
       const result = await response.json();
       setResponseMessage(result.message);
     } catch (error) {
-      console.error("Error sending data:", error);
+      //console.error("Error sending data:", error);
       setResponseMessage("Error sending data");
     }
   };

@@ -18,18 +18,18 @@ load_dotenv()
 API_KEY = os.getenv("GOOGLE_API_KEY")
 
 chat = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=API_KEY)
-memory = ConversationBufferMemory(return_messages=True)
-conversation = ConversationChain(llm=chat, memory=memory, verbose=False)
+
+room_conversations = {}
 
 MONGO_URI = os.getenv("DATABASE_URL")
+if MONGO_URI is None:
+    raise ValueError("DATABASE_URL environment variable not set")
+
+
 client = MongoClient(MONGO_URI)
 db = client["convoroom"]
 messages_collection = db["messages"]
-
-ai_response = conversation.predict(
-    input="for every converstaion from now give me a more short and correct answer"
-)
-print(ai_response)
+# print("Rooms Collection:", messages_collection)
 
 
 @api_view(["POST"])
@@ -38,20 +38,44 @@ def getReactData(request):
         data = json.loads(request.body.decode("utf-8"))
         user_message = data.get("message", "").strip()
         room_id = data.get("roomId", "").strip()
+        username = data.get("username", "User")  # Make sure username is extracted
 
         if not user_message or not room_id:
             return Response({"error": "Invalid request"}, status=400)
 
-        ai_response = conversation.predict(input=user_message)
+        if room_id not in room_conversations:
+            memory = ConversationBufferMemory(return_messages=True)
+            room_conversations[room_id] = ConversationChain(
+                llm=chat, memory=memory, verbose=False
+            )
+
+            room_conversations[room_id].predict(
+                input=(
+                    os.getenv(
+                        "Prompt",
+                        "Welcome to the chat room! How can I assist you today?",
+                    )
+                )
+            )
+
+        room_chat_history = list(
+            messages_collection.find({"room_id": room_id}, {"_id": 0}).sort("timestamp")
+        )[-5:]
+
+        context = ""
+        for msg in room_chat_history:
+            context += f"{msg['sender']}: {msg['message']}\n"
+
+        ai_response = room_conversations[room_id].predict(
+            input=f"Previous messages in this room:\n{context}\n\nUser's new message: {user_message}"
+        )
 
         collection = db["messages"]
-        print("room_id", room_id)
-        print("user_message", user_message)
-        print("ai_response", ai_response)
+
         collection.insert_one(
             {
                 "room_id": room_id,
-                "sender": "User",
+                "sender": username,
                 "message": user_message,
                 "timestamp": datetime.utcnow().isoformat(),
             }
@@ -84,7 +108,6 @@ def get_chat_history(request, room_id):
         chat_history = list(
             messages_collection.find({"room_id": room_id}, {"_id": 0}).sort("timestamp")
         )
-        print(chat_history)
         return JsonResponse({"messages": chat_history}, safe=False)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)

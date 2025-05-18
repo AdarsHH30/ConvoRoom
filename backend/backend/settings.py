@@ -1,16 +1,21 @@
 from pathlib import Path
 import os
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-
 import dotenv
 
-SECRET_KEY = dotenv.get_key(BASE_DIR / ".env", "PRODUCTION_KEY")
-CORS_ALLOW_ORIGINS = ["*"]
+BASE_DIR = Path(__file__).resolve().parent.parent
+dotenv.load_dotenv(BASE_DIR / ".env")
+PORT = int(os.getenv("PORT", "8000"))
+SECRET_KEY = os.getenv("PRODUCTION_KEY", "django-insecure-fallback-key")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+CSRF_TRUSTED_ORIGINS = [FRONTEND_URL]
 
 DEBUG = True
-
 ALLOWED_HOSTS = ["*"]
+CORS_ALLOWED_ORIGINS = [FRONTEND_URL]
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
 
 INSTALLED_APPS = [
     "daphne",
@@ -24,19 +29,30 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 ]
+DATABASES = {}
+DEFAULT_AUTO_FIELD = None
+
+AUTH_PASSWORD_VALIDATORS = []
+MIGRATION_MODULES = {
+    "auth": None,
+    "contenttypes": None,
+    "admin": None,
+    "sessions": None,
+}
+WSGI_APPLICATION = "backend.asgi.application"
 
 ASGI_APPLICATION = "backend.asgi.application"
-
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels.layers.InMemoryChannelLayer",
     },
 }
 
+
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -44,10 +60,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
-
 ROOT_URLCONF = "backend.urls"
-
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -55,7 +68,6 @@ TEMPLATES = [
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
-                "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
@@ -64,29 +76,9 @@ TEMPLATES = [
     },
 ]
 
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
-]
-
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "UTC"
-
 USE_I18N = True
-
 USE_TZ = True
 
 STATIC_URL = "static/"
-
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

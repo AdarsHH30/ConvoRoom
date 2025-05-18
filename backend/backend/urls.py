@@ -5,7 +5,7 @@ from django.urls import re_path, include
 from api.routing import websocket_urlpatterns
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    # path("admin/", admin.site.urls),
     # path("api/hello/", hello_world),
     path("api/create_room/", create_room),
     path("api/data/", getReactData),

@@ -28,7 +28,7 @@ const FetchRoomId = () => {
         setRoomId(data.roomId);
         setError(null);
       } catch (error) {
-        console.error("Error fetching room ID:", error);
+        //console.error("Error fetching room ID:", error);
         setError("Failed to generate room ID. Please try again.");
       } finally {
         setIsLoading(false);
@@ -50,7 +50,7 @@ const FetchRoomId = () => {
         setTimeout(() => setIsCopied(false), 2000);
       })
       .catch((err) => {
-        console.error("Failed to copy: ", err);
+        //console.error("Failed to copy: ", err);
       });
   };
 

@@ -37,7 +37,7 @@ function Home() {
         }
       })
       .catch((error) => {
-        console.error("Error:", error);
+        //console.error("Error:", error);
         setErrorMessage("Something went wrong. Please try again.");
       });
   };
@@ -69,7 +69,7 @@ function Home() {
         }
       })
       .catch((error) => {
-        console.error("Error:", error);
+        //console.error("Error:", error);
         setErrorMessage("Something went wrong. Please try again.");
       });
   };
