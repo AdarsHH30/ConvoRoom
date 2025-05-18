@@ -37,10 +37,6 @@ export default function Hero() {
           );
 
           setUserRooms(validRooms);
-
-          if (validRooms.length > 0) {
-            setIsSidePanelOpen(true);
-          }
         }
       } catch (error) {
         //console.error("Error loading user rooms:", error);
@@ -287,6 +283,7 @@ export default function Hero() {
           >
             <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 sm:mb-3 md:mb-4 leading-tight">
               Connecting team with AI
+              <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-800 block sm:inline">
                 ConvoRoom
               </span>
@@ -310,44 +307,101 @@ export default function Hero() {
             className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 px-2 sm:px-4 max-w-lg mx-auto"
           >
             {isJoiningRoom ? (
-              <div className="relative w-full max-w-md mx-auto">
-                <div className="bg-black/30 backdrop-blur-sm p-5 rounded-xl border border-green-800/30">
-                  <h3 className="text-lg font-medium text-white mb-3">
-                    Join a Room
-                  </h3>
-                  <div className="flex flex-col gap-3">
-                    <input
-                      type="text"
-                      value={roomId}
-                      onChange={(e) => setRoomId(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder="Enter Room ID"
-                      className="w-full px-4 py-3 rounded-lg border border-green-800/50 bg-black/30 text-white text-base focus:outline-none focus:ring-2 focus:ring-green-600/50 focus:border-transparent"
-                      autoFocus
-                    />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="relative w-full max-w-md mx-auto"
+              >
+                <div className="bg-black/40 backdrop-blur-md p-6 rounded-xl border border-green-800/40 shadow-lg">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-semibold text-white">
+                      Join a Room
+                    </h3>
+                    <button
+                      onClick={cancelJoin}
+                      className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-green-800/20 transition-colors"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <UsersRound className="h-5 w-5 text-green-600/70" />
+                      </div>
+                      <input
+                        type="text"
+                        value={roomId}
+                        onChange={(e) => setRoomId(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Enter Room ID"
+                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-green-800/50 bg-black/50 text-white placeholder-gray-500 text-base focus:outline-none focus:ring-2 focus:ring-green-600/50 focus:border-transparent transition-all duration-200"
+                        autoFocus
+                      />
+                    </div>
+
                     {errorMessage && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errorMessage}
-                      </p>
-                    )}
-                    <div className="flex gap-4 mt-2">
-                      <button
-                        onClick={handleJoinRoom}
-                        disabled={isLoading}
-                        className="flex-1  bg-green-800 hover:bg-green-700 text-white py-2.5 rounded-lg shadow-lg text-sm sm:text-base"
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-2 rounded-md text-sm"
                       >
-                        {isLoading ? "Joining..." : "Join Room"}
-                      </button>
+                        {errorMessage}
+                      </motion.div>
+                    )}
+
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleJoinRoom}
+                      disabled={isLoading}
+                      className="w-full bg-gradient-to-r from-green-800 to-green-700 hover:from-green-700 hover:to-green-600 text-white py-3 rounded-lg shadow-lg text-base font-medium transition-all duration-200 flex items-center justify-center"
+                    >
+                      {isLoading ? (
+                        <>
+                          <svg
+                            className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          Joining...
+                        </>
+                      ) : (
+                        <>Enter Room</>
+                      )}
+                    </motion.button>
+
+                    <p className="text-gray-500 text-xs text-center mt-3">
+                      Don't have a room ID?{" "}
                       <button
                         onClick={cancelJoin}
-                        className="flex-1 bg-transparent border border-gray-600 hover:bg-gray-800/30 text-gray-300 py-1 rounded-lg shadow-lg text-sm sm:text-base"
+                        className="text-green-500 hover:text-green-400"
                       >
-                        Cancel
-                      </button>
-                    </div>
+                        Create a new room
+                      </button>{" "}
+                      instead.
+                    </p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ) : (
               <>
                 <Button

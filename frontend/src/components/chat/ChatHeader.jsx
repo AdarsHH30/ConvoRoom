@@ -53,7 +53,7 @@ export function ChatHeader({
             }`}
           ></span>
           <span
-            className={`text-sm px-3 py-1.5 rounded-full ${
+            className={`text-sm px-3 py-1.5 rounded-full hidden sm:inline-block ${
               isConnected
                 ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-400"
                 : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-400"
