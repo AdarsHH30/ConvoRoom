@@ -2,7 +2,7 @@
 
 cd backend
 source venv/bin/activate
-python3 manage.py runserver 9999&
+python3 manage.py runserver 8000&
 cd ..
 
 cd frontend
