@@ -5,7 +5,7 @@ import {
   useMotionValue,
   useSpring,
   useTransform,
-} from "motion/react";
+} from "framer-motion";
 
 const cn = (...classes) => {
   return classes.filter(Boolean).join(" ");
