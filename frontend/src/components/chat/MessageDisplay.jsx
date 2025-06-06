@@ -8,7 +8,7 @@ import { MessageActions } from "./MessageActions";
 
 export function MessageDisplay({ message, username, copyToClipboard }) {
   const isAIMessage = message.sender === "AI";
-  const isUserMessage = message.sender === username;
+  const _isUserMessage = message.sender === username;
 
   return (
     <div
@@ -41,7 +41,7 @@ export function MessageDisplay({ message, username, copyToClipboard }) {
   );
 }
 
-function renderMessageContent(message, copyToClipboard) {
+function renderMessageContent(message, _copyToClipboard) {
   if (message.sender === "AI" && message.hasCodeBlocks) {
     return (
       <div className="w-full overflow-hidden">

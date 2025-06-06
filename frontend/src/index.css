@@ -134,4 +134,17 @@ body {
     80% { transform: translate(-15%,0) }
     90% { transform: translate(10%,5%) }
     100% { transform: translate(5%,0) }
-} 
+}
+
+/* Ball styles for BallTrail component */
+.ball {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(200deg, #00ff00, #ffffff);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  opacity: 0.8;
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.6);
+}

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 
-export function MessageActions({ message, copyToClipboard }) {
+export function MessageActions({ message, _copyToClipboard }) {
   const [showActions, setShowActions] = useState(false);
 
   return (

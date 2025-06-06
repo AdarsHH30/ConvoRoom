@@ -1,14 +1,13 @@
 "use client";
-import React, { useRef, useEffect } from "react";
-import { ChevronLeft } from "lucide-react";
+import { useRef, useEffect } from "react";
 
 export function ChatHeader({
   isConnected,
   username,
-  recentRooms,
+  _recentRooms,
   showRecentRooms,
   setShowRecentRooms,
-  navigateToRoom,
+  _navigateToRoom,
 }) {
   const dropdownRef = useRef(null);
 

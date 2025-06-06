@@ -33,7 +33,7 @@ export default function BallTrail() {
       let prevX = mouseX;
       let prevY = mouseY;
 
-      balls.forEach((ball, index) => {
+      balls.forEach((ball, _index) => {
         const dx = prevX - ball.x;
         const dy = prevY - ball.y;
 
@@ -64,21 +64,7 @@ export default function BallTrail() {
     <div
       ref={containerRef}
       className="fixed inset-0 bg-black overflow-hidden cursor-none"
-    >
-      <style jsx global>{`
-        .ball {
-          position: fixed;
-          width: 20px;
-          height: 20px;
-          background: linear-gradient(200deg, #00ff00, #ffffff);
-          border-radius: 50%;
-          pointer-events: none;
-          transform: translate(-50%, -50%);
-          opacity: 0.8;
-          box-shadow: 0 0 8px rgba(0, 255, 0, 0.6);
-        }
-      `}</style>
-    </div>
+    ></div>
   );
 }
 export { BallTrail };

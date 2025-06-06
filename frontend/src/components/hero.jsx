@@ -38,8 +38,8 @@ export default function Hero() {
 
           setUserRooms(validRooms);
         }
-      } catch (error) {
-        //console.error("Error loading user rooms:", error);
+      } catch (_error) {
+        //console.error("Error loading user rooms:", _error);
       }
     };
 
@@ -74,8 +74,8 @@ export default function Hero() {
           navigate(`/room/${data.roomId}`);
         }
       })
-      .catch((error) => {
-        //console.error("Error:", error);
+      .catch((_error) => {
+        //console.error("Error:", _error);
         setErrorMessage("Something went wrong. Please try again.");
         setIsLoading(false);
       });
@@ -133,8 +133,8 @@ export default function Hero() {
           setIsLoading(false);
         }
       })
-      .catch((error) => {
-        //console.error("Error:", error);
+      .catch((_error) => {
+        //console.error("Error:", _error);
         setErrorMessage("Connection error. Please try again.");
         setIsLoading(false);
       });
@@ -160,7 +160,7 @@ export default function Hero() {
       } else {
         return false;
       }
-    } catch (error) {
+    } catch (_error) {
       return false;
     } finally {
       localStorage.removeItem("testKey");
@@ -216,11 +216,6 @@ export default function Hero() {
         }}
       >
         <div className="p-6">
-          <style jsx global>{`
-            .scrollbar-hide::-webkit-scrollbar {
-              display: none;
-            }
-          `}</style>
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-green-700 font-semibold text-lg flex items-center gap-2">
               <History size={20} className="text-green-500" />

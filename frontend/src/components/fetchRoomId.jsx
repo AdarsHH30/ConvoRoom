@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 
@@ -27,8 +27,8 @@ const FetchRoomId = () => {
         const data = await response.json();
         setRoomId(data.roomId);
         setError(null);
-      } catch (error) {
-        //console.error("Error fetching room ID:", error);
+      } catch (_error) {
+        //console.error("Error fetching room ID:", _error);
         setError("Failed to generate room ID. Please try again.");
       } finally {
         setIsLoading(false);
@@ -49,8 +49,8 @@ const FetchRoomId = () => {
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
       })
-      .catch((err) => {
-        //console.error("Failed to copy: ", err);
+      .catch((_err) => {
+        //console.error("Failed to copy: ", _err);
       });
   };
 

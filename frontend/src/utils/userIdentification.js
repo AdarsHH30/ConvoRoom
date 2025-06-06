@@ -20,9 +20,6 @@ export const getUserIdentity = () => {
     }
     localStorage.setItem(username, true);
     localStorage.setItem('convoroom_username', username);
-    //console.log('Created new username:', username);
-  } else {
-    //console.log('Found existing username:', username);
   }
   
   return { username };

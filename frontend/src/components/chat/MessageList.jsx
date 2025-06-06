@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 import { MessageDisplay } from "./MessageDisplay";
 import { TypingIndicator } from "./TypingIndicator";
 import { ChevronUp } from "lucide-react";
@@ -52,12 +52,6 @@ export function MessageList({
         msOverflowStyle: "none",
       }}
     >
-      <style jsx>{`
-        div::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
-
       {messages.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-full">
           <div className="text-gray-400 mb-4">No messages yet</div>

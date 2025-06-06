@@ -1,10 +1,8 @@
-"use client";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { flushSync } from "react-dom";
-import { ChatHeader } from "./ChatHeader";
-import { MessageList } from "./MessageList";
-import { ChatInput } from "./ChatInput";
-import { getUserIdentity } from "../utils/userIdentification";
+import { ChatHeader } from "./chat/ChatHeader";
+import { MessageList } from "./chat/MessageList";
+import { ChatInput } from "./chat/ChatInput";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const VITE_WS_API = import.meta.env.VITE_WS_API;
@@ -18,7 +16,7 @@ function ChatUI() {
   const [recentRooms, setRecentRooms] = useState([]);
   const [showRecentRooms, setShowRecentRooms] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [username, setUsername] = useState(() => {
+  const [username, _setUsername] = useState(() => {
     // Get username from localStorage or use "User" as fallback
     return localStorage.getItem("username") || "User";
   });
@@ -115,7 +113,6 @@ function ChatUI() {
           const isNewRoom = now - creationTime < 2000;
 
           if (isNewRoom) {
-            //console.log("Skipping history fetch for new room");
             return;
           }
         }
@@ -143,8 +140,8 @@ function ChatUI() {
         }));
 
         setMessages(formattedMessages);
-      } catch (error) {
-        //console.error("Error fetching chat history:", error);
+      } catch (_error) {
+        //console.error("Error fetching chat history:", _error);
       }
     };
 
@@ -188,8 +185,8 @@ function ChatUI() {
         if (!showScrollButton) {
           scrollToBottom();
         }
-      } catch (error) {
-        //console.error("WebSocket message parsing error:", error);
+      } catch (_error) {
+        //console.error("WebSocket message parsing error:", _error);
       }
     },
     [showScrollButton, extractLanguage, parseMessageContent, scrollToBottom]
@@ -289,8 +286,8 @@ function ChatUI() {
           scrollToBottom();
         }
       }
-    } catch (error) {
-      //console.error("Message sending failed:", error);
+    } catch (_error) {
+      //console.error("Message sending failed:", _error);
       setMessages((prev) => prev.filter((msg) => msg.id !== messageData.id));
       setIsTyping(false);
     } finally {

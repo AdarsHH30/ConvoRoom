@@ -1,16 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import FetchRoomId from "../components/fetchRoomId";
-import BallTrail from "@/components/ui/ballTrail";
 import ChatUI from "../components/chat/ChatUI";
-import {
-  UserPlus,
-  Link,
-  ChevronLeft,
-  Copy,
-  Check,
-  ChevronRight,
-} from "lucide-react";
+import { Link, ChevronLeft, Copy, Check } from "lucide-react";
 const Room = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
@@ -45,8 +36,6 @@ const Room = () => {
       })
       .catch((err) => console.error("Failed to copy: ", err));
   };
-
-  const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
 
   return (
     <div className="w-full h-screen flex flex-col">

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import { useState } from "react";
 
 function Chat() {
   const [responseMessage, setResponseMessage] = useState("");
@@ -20,8 +20,8 @@ function Chat() {
 
       const result = await response.json();
       setResponseMessage(result.message);
-    } catch (error) {
-      //console.error("Error sending data:", error);
+    } catch (_error) {
+      //console.error("Error sending data:", _error);
       setResponseMessage("Error sending data");
     }
   };

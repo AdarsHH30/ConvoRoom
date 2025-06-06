@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 import { PlaceholdersAndVanishInput } from "../ui/placeholders-and-vanish-input";
 
 export function ChatInput({
@@ -15,7 +14,7 @@ export function ChatInput({
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       if (inputText.trim()) {
-        const messageToSend = inputText;
+        const _messageToSend = inputText;
         setInputText("");
         setTimeout(() => sendMessage(), 0);
       }

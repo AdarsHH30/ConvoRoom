@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useEffect, useState } from "react";
+import PropTypes from "prop-types";
 
-const ThemeProviderContext = createContext({
+export const ThemeProviderContext = createContext({
   theme: "system",
   setTheme: () => null,
 });
@@ -48,11 +49,8 @@ export function ThemeProvider({
   );
 }
 
-export const useTheme = () => {
-  const context = useContext(ThemeProviderContext);
-
-  if (context === undefined)
-    throw new Error("useTheme must be used within a ThemeProvider");
-
-  return context;
+ThemeProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+  defaultTheme: PropTypes.string,
+  storageKey: PropTypes.string,
 };
