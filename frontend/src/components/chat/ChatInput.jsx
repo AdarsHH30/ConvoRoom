@@ -1,6 +1,5 @@
 "use client";
 import { PlaceholdersAndVanishInput } from "../ui/placeholders-and-vanish-input";
-import { useEffect, useState } from "react";
 
 export function ChatInput({
   inputText,
@@ -11,93 +10,6 @@ export function ChatInput({
   username,
   isEmpty,
 }) {
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  useEffect(() => {
-    let initialViewportHeight = window.innerHeight;
-
-    const handleViewportChange = () => {
-      if (window.visualViewport) {
-        const currentHeight = window.visualViewport.height;
-        const heightDifference = initialViewportHeight - currentHeight;
-        
-        // Keyboard is visible if viewport height decreased significantly
-        const isVisible = heightDifference > 150; // Threshold for keyboard detection
-        setIsKeyboardVisible(isVisible);
-        setKeyboardHeight(isVisible ? heightDifference : 0);
-
-        // Manage body scroll for mobile
-        if (window.innerWidth <= 640) {
-          if (isVisible) {
-            document.body.classList.add('keyboard-active-body');
-          } else {
-            document.body.classList.remove('keyboard-active-body');
-          }
-        }
-      }
-    };
-
-    const handleWindowResize = () => {
-      // Update initial height on orientation change
-      if (!isKeyboardVisible) {
-        initialViewportHeight = window.innerHeight;
-      }
-    };
-
-    const handleInputFocus = (e) => {
-      if (window.innerWidth <= 640 && e.target.tagName === 'INPUT') {
-        // Small delay to ensure keyboard is shown
-        setTimeout(() => {
-          if (window.visualViewport) {
-            // Scroll to keep input visible above keyboard
-            const inputRect = e.target.getBoundingClientRect();
-            const viewportHeight = window.visualViewport.height;
-            const scrollTarget = inputRect.top + window.scrollY - (viewportHeight * 0.3);
-            
-            window.scrollTo({
-              top: Math.max(0, scrollTarget),
-              behavior: 'smooth'
-            });
-          }
-        }, 300);
-      }
-    };
-
-    const handleInputBlur = () => {
-      // Reset scroll position and body class when input loses focus
-      if (window.innerWidth <= 640) {
-        setTimeout(() => {
-          document.body.classList.remove('keyboard-active-body');
-          if (isKeyboardVisible) {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }
-        }, 100);
-      }
-    };
-
-    // Use visual viewport API when available
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleViewportChange);
-      window.addEventListener('resize', handleWindowResize);
-    }
-
-    // Listen for input focus/blur events
-    document.addEventListener('focusin', handleInputFocus);
-    document.addEventListener('focusout', handleInputBlur);
-
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleViewportChange);
-        window.removeEventListener('resize', handleWindowResize);
-      }
-      document.removeEventListener('focusin', handleInputFocus);
-      document.removeEventListener('focusout', handleInputBlur);
-      
-      // Clean up body class on unmount
-      document.body.classList.remove('keyboard-active-body');
-    };
-  }, [isKeyboardVisible]);
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -117,19 +29,7 @@ export function ChatInput({
   };
 
   return (
-    <div 
-      className={`transition-all duration-300 bg-[var(--background)] w-full ${
-        isKeyboardVisible 
-          ? 'fixed bottom-0 left-0 right-0 pt-2 pb-2 px-1 z-50 border-t' 
-          : 'pt-0 pb-0 px-1 sm:p-2 md:p-3'
-      }`}
-      style={{
-        // Adjust position based on keyboard height on mobile
-        transform: isKeyboardVisible && window.innerWidth <= 640 
-          ? `translateY(-${Math.min(keyboardHeight * 0.1, 20)}px)` 
-          : 'none'
-      }}
-    >
+    <div className="pt-6 pb-6 px-1 sm:p-2 md:p-3 bg-[var(--background)] w-full">
       <div
         className={`flex gap-1.5 sm:gap-2 items-center ${
           isEmpty ? "justify-center" : ""
@@ -142,11 +42,10 @@ export function ChatInput({
             e.preventDefault();
           }}
           onKeyDown={handleKeyDown}
-          className={`flex-1 rounded-full text-sm px-3 sm:px-4 w-full auto-resize-input transition-all duration-300 ${
+          className={`flex-1 rounded-full text-sm px-3 sm:px-4 w-full auto-resize-input ${
             isEmpty ? "max-w-xs sm:max-w-md" : ""
           }`}
           disabled={isSending || !isConnected || !username}
-          placeholder="Type your message..."
         />
         <button
           onClick={handleSendClick}
@@ -170,11 +69,9 @@ export function ChatInput({
           </svg>
         </button>
       </div>
-      {!isKeyboardVisible && (
-        <div className="mt-1 sm:mt-1.5 md:mt-2 text-xs text-gray-500 dark:text-gray-400 text-center">
-          Press Enter to send, Shift+Enter for new line
-        </div>
-      )}
+      <div className="mt-1 sm:mt-1.5 md:mt-2 text-xs text-gray-500 dark:text-gray-400 text-center">
+        Press Enter to send, Shift+Enter for new line
+      </div>
     </div>
   );
 }

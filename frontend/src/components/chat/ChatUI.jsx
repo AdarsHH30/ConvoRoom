@@ -101,7 +101,7 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
   // Refs
   const messagesEndRef = useRef(null);
   const wsRef = useRef(null);
-  const messageTracker = useRef(new Set());
+  const recentMessagesRef = useRef(new Map()); // Track recent messages to prevent duplicates
 
   // Get room ID from URL or props
   const roomId = propRoomId || window.location.pathname.split("/").pop();
@@ -202,17 +202,41 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
         }
 
         const messageSender = data.username || "Unknown";
-        const contentId = `${messageSender}-${data.message}`;
 
-        // Prevent duplicate messages
-        if (messageTracker.current.has(contentId)) {
+        // Skip messages from the current user to prevent duplicates
+        // (since we already add user messages immediately in sendMessage)
+        if (messageSender === username) {
+          console.log("Skipping own message from WebSocket:", data.message);
           return;
         }
 
-        messageTracker.current.add(contentId);
+        const messageKey = `${messageSender}-${data.message}`;
+        const now = Date.now();
+
+        // Check if we've seen this exact message recently (within 5 seconds)
+        const lastSeenTime = recentMessagesRef.current.get(messageKey);
+        if (lastSeenTime && now - lastSeenTime < 5000) {
+          console.log("Skipping duplicate message:", messageKey);
+          return; // Skip duplicate message
+        }
+
+        console.log(
+          "Adding new message from WebSocket:",
+          messageSender,
+          data.message
+        );
+
+        // Record this message
+        recentMessagesRef.current.set(messageKey, now);
+
+        // Clean up old entries (older than 10 seconds)
+        for (const [key, timestamp] of recentMessagesRef.current.entries()) {
+          if (now - timestamp > 10000) {
+            recentMessagesRef.current.delete(key);
+          }
+        }
 
         const newMessage = createMessageObject(messageSender, data.message);
-
         setMessages((prev) => [...prev, newMessage]);
 
         // Auto-scroll if user is at bottom
@@ -225,7 +249,7 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
         console.error("WebSocket message parsing error:", _error);
       }
     },
-    [showScrollButton]
+    [showScrollButton, username]
   );
 
   // WebSocket connection management
@@ -277,7 +301,7 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
     }
 
     const messageToSend = inputText.trim();
-    const contentId = `${username}-${messageToSend}`;
+    console.log("Sending message:", messageToSend, "from user:", username);
 
     // Clear input immediately
     flushSync(() => {
@@ -286,35 +310,23 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
 
     setIsSending(true);
 
-    // Add user message to UI
+    // Add user message to UI - always add, no deduplication for user messages
     const userMessage = createMessageObject(username, messageToSend);
+    console.log("Adding user message to UI:", userMessage.id);
 
-    if (!messageTracker.current.has(contentId)) {
-      messageTracker.current.add(contentId);
+    flushSync(() => {
+      setMessages((prev) => [...prev, userMessage]);
+    });
 
-      flushSync(() => {
-        setMessages((prev) => [...prev, userMessage]);
-      });
-
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 
     try {
-      // Send via WebSocket
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(
-          JSON.stringify({
-            type: "chat_message",
-            message: messageToSend,
-            roomId,
-            username,
-          })
-        );
-      }
+      // DON'T send via WebSocket for user messages to prevent echo
+      // The backend will handle broadcasting to other users
 
       setIsTyping(true);
 
-      // Send to API
+      // Send to API only
       const response = await fetch(`${BACKEND_URL}api/data/`, {
         method: "POST",
         headers: {
@@ -338,18 +350,24 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
 
       // Add AI response
       if (aiResponse) {
-        const aiContentId = `AI-${aiResponse}`;
+        const aiMessageKey = `AI-${aiResponse}`;
+        const now = Date.now();
 
-        if (!messageTracker.current.has(aiContentId)) {
-          messageTracker.current.add(aiContentId);
+        // Check if we've seen this AI response recently (within 5 seconds)
+        const lastAiTime = recentMessagesRef.current.get(aiMessageKey);
+        if (!lastAiTime || now - lastAiTime >= 5000) {
+          console.log("Adding AI response:", aiResponse);
+          // Record this AI response
+          recentMessagesRef.current.set(aiMessageKey, now);
 
           const aiMessage = createMessageObject("AI", aiResponse);
-
           setMessages((prev) => [...prev, aiMessage]);
 
           setTimeout(() => {
             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
           }, 100);
+        } else {
+          console.log("Skipping duplicate AI response");
         }
       }
     } catch (error) {
@@ -357,9 +375,6 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
 
       // Remove user message on error
       setMessages((prev) => prev.filter((msg) => msg.id !== userMessage.id));
-
-      // Remove from tracker
-      messageTracker.current.delete(contentId);
 
       showToast("Failed to send message. Please try again.");
     } finally {
@@ -388,7 +403,7 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
   // Loading state
   if (isLoadingHistory) {
     return (
-      <div className="w-full max-w-5xl mx-auto p-2 md:p-4 h-[100dvh] sm:h-[90vh] flex items-center justify-center">
+      <div className="w-full max-w-5xl mx-auto p-2 md:p-4 h-[90vh] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading chat history...</p>
@@ -398,8 +413,8 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-1 sm:p-2 md:p-4 h-[100dvh] sm:h-[90vh] flex flex-col">
-      <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col overflow-hidden w-full min-h-0">
+    <div className="w-full max-w-5xl mx-auto p-1 sm:p-2 md:p-4 h-[90vh] flex flex-col">
+      <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col overflow-hidden w-full">
         <ChatHeader
           isConnected={isConnected}
           username={username}
