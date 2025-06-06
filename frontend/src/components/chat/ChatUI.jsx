@@ -206,7 +206,6 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
         // Skip messages from the current user to prevent duplicates
         // (since we already add user messages immediately in sendMessage)
         if (messageSender === username) {
-          console.log("Skipping own message from WebSocket:", data.message);
           return;
         }
 
@@ -216,15 +215,8 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
         // Check if we've seen this exact message recently (within 5 seconds)
         const lastSeenTime = recentMessagesRef.current.get(messageKey);
         if (lastSeenTime && now - lastSeenTime < 5000) {
-          console.log("Skipping duplicate message:", messageKey);
           return; // Skip duplicate message
         }
-
-        console.log(
-          "Adding new message from WebSocket:",
-          messageSender,
-          data.message
-        );
 
         // Record this message
         recentMessagesRef.current.set(messageKey, now);
@@ -301,7 +293,6 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
     }
 
     const messageToSend = inputText.trim();
-    console.log("Sending message:", messageToSend, "from user:", username);
 
     // Clear input immediately
     flushSync(() => {
@@ -312,7 +303,6 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
 
     // Add user message to UI - always add, no deduplication for user messages
     const userMessage = createMessageObject(username, messageToSend);
-    console.log("Adding user message to UI:", userMessage.id);
 
     flushSync(() => {
       setMessages((prev) => [...prev, userMessage]);
@@ -356,7 +346,6 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
         // Check if we've seen this AI response recently (within 5 seconds)
         const lastAiTime = recentMessagesRef.current.get(aiMessageKey);
         if (!lastAiTime || now - lastAiTime >= 5000) {
-          console.log("Adding AI response:", aiResponse);
           // Record this AI response
           recentMessagesRef.current.set(aiMessageKey, now);
 
@@ -366,8 +355,6 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
           setTimeout(() => {
             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
           }, 100);
-        } else {
-          console.log("Skipping duplicate AI response");
         }
       }
     } catch (error) {
