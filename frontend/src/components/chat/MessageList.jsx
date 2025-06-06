@@ -46,18 +46,20 @@ export function MessageList({
   return (
     <div
       ref={containerRef}
-      className="flex-1 overflow-auto p-3 h-[calc(100%-56px)] w-full scrollbar-hide relative"
+      className="flex-1 overflow-auto p-2 sm:p-3 h-[calc(100%-56px)] w-full scrollbar-hide relative messages-container"
       style={{
         scrollbarWidth: "none",
         msOverflowStyle: "none",
       }}
     >
       {messages.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-full">
-          <div className="text-gray-400 mb-4">No messages yet</div>
+        <div className="flex flex-col items-center justify-center h-full px-4">
+          <div className="text-gray-400 mb-4 text-center text-sm sm:text-base">
+            No messages yet
+          </div>
         </div>
       ) : (
-        <div className="space-y-3 min-h-full">
+        <div className="space-y-2 sm:space-y-3 min-h-full">
           {messages.map((message) => (
             <MessageDisplay
               key={message.id}
@@ -69,7 +71,7 @@ export function MessageList({
 
           {isTyping && (
             <div className="flex items-end justify-start">
-              <div className="bg-gray-100 dark:bg-zinc-800 p-3 rounded-2xl">
+              <div className="bg-gray-100 dark:bg-zinc-800 p-2 sm:p-3 rounded-2xl">
                 <TypingIndicator />
               </div>
             </div>
@@ -82,10 +84,10 @@ export function MessageList({
       {showScrollButton && (
         <button
           onClick={scrollToBottom}
-          className="fixed bottom-24 right-4 md:right-8 bg-gray-800 dark:bg-zinc-700 text-white p-2 rounded-full shadow-lg hover:bg-gray-700 dark:hover:bg-zinc-600 transition-all z-10"
+          className="fixed bottom-20 sm:bottom-24 right-2 sm:right-4 md:right-8 bg-gray-800 dark:bg-zinc-700 text-white p-1.5 sm:p-2 rounded-full shadow-lg hover:bg-gray-700 dark:hover:bg-zinc-600 transition-all z-10"
           aria-label="Scroll to bottom"
         >
-          <ChevronUp className="h-5 w-5" />
+          <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
       )}
     </div>

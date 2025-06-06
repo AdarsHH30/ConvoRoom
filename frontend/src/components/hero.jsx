@@ -172,20 +172,21 @@ export default function Hero() {
   }, []);
 
   return (
-    <div className="relative min-h-[calc(100vh-100px)] flex items-center justify-center w-full py-4 sm:py-8 px-2 sm:px-4">
+    <div className="relative min-h-[calc(100vh-100px)] flex items-center justify-center w-full py-2 sm:py-4 md:py-8 px-1 sm:px-2 md:px-4">
       {!isSidePanelOpen && (
-        <div className="fixed top-4 left-4 z-30 group">
+        <div className="fixed top-2 sm:top-4 left-2 sm:left-4 z-30 group">
           <button
             onClick={() => setIsSidePanelOpen(true)}
-            className="p-2 rounded-md transition-all duration-300"
+            className="p-1.5 sm:p-2 rounded-md transition-all duration-300"
             aria-label="Toggle history panel"
           >
             <svg
-              width="24"
-              height="24"
+              width="20"
+              height="20"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              className="sm:w-6 sm:h-6"
             >
               <rect
                 x="4"
@@ -200,14 +201,14 @@ export default function Hero() {
             </svg>
           </button>
 
-          <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-zinc-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
+          <div className="absolute left-full ml-1 sm:ml-2 top-1/2 -translate-y-1/2 px-1.5 sm:px-2 py-1 bg-zinc-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
             Recent Rooms
           </div>
         </div>
       )}
 
       <div
-        className={`fixed left-0 top-0 h-full w-[280px] bg-gradient-to-b from-[#0a0a0a] to-[#121212] border-r border-green-800/40 z-20 transition-all duration-300 overflow-y-auto shadow-xl scrollbar-hide ${
+        className={`fixed left-0 top-0 h-full w-[240px] sm:w-[280px] bg-gradient-to-b from-[#0a0a0a] to-[#121212] border-r border-green-800/40 z-20 transition-all duration-300 overflow-y-auto shadow-xl scrollbar-hide ${
           isSidePanelOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         style={{
@@ -215,52 +216,54 @@ export default function Hero() {
           msOverflowStyle: "none",
         }}
       >
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-green-700 font-semibold text-lg flex items-center gap-2">
-              <History size={20} className="text-green-500" />
+        <div className="p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h3 className="text-green-700 font-semibold text-base sm:text-lg flex items-center gap-2">
+              <History size={18} className="text-green-500 sm:w-5 sm:h-5" />
               Past Rooms
             </h3>
             <button
               onClick={() => setIsSidePanelOpen(false)}
               className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-green-800/20 transition-colors"
             >
-              <X size={20} />
+              <X size={18} className="sm:w-5 sm:h-5" />
             </button>
           </div>
 
           {userRooms && userRooms.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-1.5 sm:space-y-2">
               {userRooms.map((room) => (
                 <div
                   key={room.id}
                   onClick={() => navigateToRoom(room.id)}
-                  className="py-3 px-3 rounded-md cursor-pointer hover:bg-zinc-800/70 transition-all text-gray-300 truncate"
+                  className="py-2.5 sm:py-3 px-2.5 sm:px-3 rounded-md cursor-pointer hover:bg-zinc-800/70 transition-all text-gray-300 truncate text-sm sm:text-base"
                 >
                   {room.id}
                 </div>
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center text-center p-6">
+            <div className="flex flex-col items-center justify-center text-center p-4 sm:p-6">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-gray-500 mb-3"
+                className="text-gray-500 mb-2 sm:mb-3 sm:w-6 sm:h-6"
               >
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="12" y1="8" x2="12" y2="12"></line>
                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
               </svg>
-              <p className="text-gray-400">No rooms history found</p>
-              <p className="text-gray-500 text-xs mt-2">
+              <p className="text-gray-400 text-sm sm:text-base">
+                No rooms history found
+              </p>
+              <p className="text-gray-500 text-xs mt-1 sm:mt-2">
                 Create a room to get started
               </p>
             </div>
@@ -268,15 +271,15 @@ export default function Hero() {
         </div>
       </div>
 
-      <div className="container mx-auto relative z-10">
+      <div className="container mx-auto relative z-10 px-2 sm:px-4">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="px-2 sm:px-4"
+            className="px-1 sm:px-2 md:px-4"
           >
-            <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 sm:mb-3 md:mb-4 leading-tight">
+            <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-2 sm:mb-3 md:mb-4 leading-tight">
               Connecting team with AI
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-400 block sm:inline">
@@ -289,7 +292,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-gray-400 text-sm sm:text-base md:text-lg lg:text-xl mb-4 sm:mb-6 md:mb-8 max-w-2xl mx-auto px-2 sm:px-4 leading-relaxed"
+            className="text-gray-400 text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl mb-3 sm:mb-4 md:mb-6 lg:mb-8 max-w-2xl mx-auto px-1 sm:px-2 md:px-4 leading-relaxed"
           >
             Collaborate with your friends and let AI assist you for your group
             work.
@@ -299,7 +302,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 px-2 sm:px-4 max-w-lg mx-auto"
+            className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 md:gap-4 px-1 sm:px-2 md:px-4 max-w-sm sm:max-w-lg mx-auto"
           >
             {isJoiningRoom ? (
               <motion.div
@@ -307,25 +310,25 @@ export default function Hero() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
-                className="relative w-full max-w-md mx-auto"
+                className="relative w-full max-w-xs sm:max-w-md mx-auto"
               >
-                <div className="bg-black/40 backdrop-blur-md p-6 rounded-xl border border-green-800/40 shadow-lg">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-semibold text-white">
+                <div className="bg-black/40 backdrop-blur-md p-4 sm:p-6 rounded-xl border border-green-800/40 shadow-lg">
+                  <div className="flex justify-between items-center mb-3 sm:mb-4">
+                    <h3 className="text-lg sm:text-xl font-semibold text-white">
                       Join a Room
                     </h3>
                     <button
                       onClick={cancelJoin}
                       className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-green-800/20 transition-colors"
                     >
-                      <X size={20} />
+                      <X size={18} className="sm:w-5 sm:h-5" />
                     </button>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <UsersRound className="h-5 w-5 text-green-600/70" />
+                      <div className="absolute inset-y-0 left-0 pl-2.5 sm:pl-3 flex items-center pointer-events-none">
+                        <UsersRound className="h-4 w-4 sm:h-5 sm:w-5 text-green-600/70" />
                       </div>
                       <input
                         type="text"
@@ -333,7 +336,7 @@ export default function Hero() {
                         onChange={(e) => setRoomId(e.target.value)}
                         onKeyPress={handleKeyPress}
                         placeholder="Enter Room ID"
-                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-green-800/50 bg-black/50 text-white placeholder-gray-500 text-base focus:outline-none focus:ring-2 focus:ring-green-600/50 focus:border-transparent transition-all duration-200"
+                        className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 rounded-lg border border-green-800/50 bg-black/50 text-white placeholder-gray-500 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-600/50 focus:border-transparent transition-all duration-200"
                         autoFocus
                       />
                     </div>
@@ -342,7 +345,7 @@ export default function Hero() {
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-2 rounded-md text-sm"
+                        className="bg-red-500/20 border border-red-500/30 text-red-400 px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm"
                       >
                         {errorMessage}
                       </motion.div>
@@ -353,12 +356,12 @@ export default function Hero() {
                       whileTap={{ scale: 0.98 }}
                       onClick={handleJoinRoom}
                       disabled={isLoading}
-                      className="w-full bg-gradient-to-r from-green-800 to-green-700 hover:from-green-700 hover:to-green-600 text-white py-3 rounded-lg shadow-lg text-base font-medium transition-all duration-200 flex items-center justify-center"
+                      className="w-full bg-gradient-to-r from-green-800 to-green-700 hover:from-green-700 hover:to-green-600 text-white py-2.5 sm:py-3 rounded-lg shadow-lg text-sm sm:text-base font-medium transition-all duration-200 flex items-center justify-center"
                     >
                       {isLoading ? (
                         <>
                           <svg
-                            className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
+                            className="animate-spin -ml-1 mr-2 h-4 w-4 sm:h-5 sm:w-5 text-white"
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -384,7 +387,7 @@ export default function Hero() {
                       )}
                     </motion.button>
 
-                    <p className="text-gray-500 text-xs text-center mt-3">
+                    <p className="text-gray-500 text-xs text-center mt-2 sm:mt-3">
                       Don't have a room ID?{" "}
                       <button
                         onClick={cancelJoin}
@@ -403,18 +406,18 @@ export default function Hero() {
                   size="lg"
                   onClick={createRoom}
                   disabled={isLoading}
-                  className="w-full sm:w-auto bg-green-800 hover:bg-green-700 text-white px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 rounded-lg shadow-lg text-sm sm:text-base min-w-[140px]"
+                  className="w-full sm:w-auto bg-green-800 hover:bg-green-700 text-white px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 lg:py-4 rounded-lg shadow-lg text-xs sm:text-sm md:text-base min-w-[120px] sm:min-w-[140px]"
                 >
-                  <CirclePlus className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                  <CirclePlus className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
                   {isLoading ? "Creating..." : "Create Room"}
                 </Button>
                 <Button
                   onClick={joinRoom}
-                  className="w-full sm:w-auto bg-transparent text-green-500 border border-green-600 hover:bg-green-600/20 px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 rounded-lg shadow-lg text-sm sm:text-base min-w-[140px]"
+                  className="w-full sm:w-auto bg-transparent text-green-500 border border-green-600 hover:bg-green-600/20 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 lg:py-4 rounded-lg shadow-lg text-xs sm:text-sm md:text-base min-w-[120px] sm:min-w-[140px]"
                   size="lg"
                   variant="outline"
                 >
-                  <UsersRound className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                  <UsersRound className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
                   Join Room
                 </Button>
               </>

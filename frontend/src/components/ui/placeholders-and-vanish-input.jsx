@@ -205,7 +205,7 @@ export function PlaceholdersAndVanishInput({
     >
       <canvas
         className={cn(
-          "absolute pointer-events-none text-base transform scale-50 top-[20%] left-2 sm:left-8 origin-top-left filter invert dark:invert-0 pr-20",
+          "absolute pointer-events-none text-base transform scale-50 top-[20%] left-1 sm:left-2 md:left-8 origin-top-left filter invert dark:invert-0 pr-16 sm:pr-20",
           !animating ? "opacity-0" : "opacity-100"
         )}
         ref={canvasRef}
@@ -225,17 +225,17 @@ export function PlaceholdersAndVanishInput({
         value={value}
         rows={1}
         className={cn(
-          "w-full relative text-sm sm:text-base z-50 border-none dark:text-white bg-transparent text-black rounded-full focus:outline-none focus:ring-0 pl-4 sm:pl-10 pr-20 resize-none py-3",
+          "w-full relative text-sm sm:text-base z-50 border-none dark:text-white bg-transparent text-black rounded-full focus:outline-none focus:ring-0 pl-3 sm:pl-4 md:pl-10 pr-16 sm:pr-20 resize-none py-2.5 sm:py-3",
           animating && "text-transparent dark:text-transparent"
         )}
         style={{
-          minHeight: "48px",
+          minHeight: "42px",
           maxHeight: "120px",
           overflowY: "auto",
-          lineHeight: "24px",
+          lineHeight: "20px",
           display: "flex",
           alignItems: "center",
-          paddingTop: "12px",
+          paddingTop: "10px",
         }}
       />
       <div className="absolute inset-0 flex items-center rounded-full pointer-events-none">

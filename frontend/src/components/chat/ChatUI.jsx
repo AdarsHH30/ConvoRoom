@@ -85,7 +85,7 @@ const showToast = (message, duration = TOAST_DURATION) => {
   }, duration);
 };
 
-function ChatUI() {
+function ChatUI({ roomId: propRoomId, onConnectionChange }) {
   // State management
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
@@ -103,8 +103,8 @@ function ChatUI() {
   const wsRef = useRef(null);
   const messageTracker = useRef(new Set());
 
-  // Get room ID from URL
-  const roomId = window.location.pathname.split("/").pop();
+  // Get room ID from URL or props
+  const roomId = propRoomId || window.location.pathname.split("/").pop();
 
   // Initialize username
   useEffect(() => {
@@ -244,15 +244,18 @@ function ChatUI() {
 
     const handleOpen = () => {
       setIsConnected(true);
+      onConnectionChange?.(true);
     };
 
     const handleError = (error) => {
       console.error("WebSocket connection error:", error);
       setIsConnected(false);
+      onConnectionChange?.(false);
     };
 
     const handleClose = (event) => {
       setIsConnected(false);
+      onConnectionChange?.(false);
     };
 
     ws.addEventListener("open", handleOpen);
@@ -385,7 +388,7 @@ function ChatUI() {
   // Loading state
   if (isLoadingHistory) {
     return (
-      <div className="w-full max-w-5xl mx-auto p-2 md:p-4 h-[90vh] flex items-center justify-center">
+      <div className="w-full max-w-5xl mx-auto p-2 md:p-4 h-[100dvh] sm:h-[90vh] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading chat history...</p>
@@ -395,8 +398,8 @@ function ChatUI() {
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-2 md:p-4 h-[90vh] flex flex-col">
-      <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col overflow-hidden w-full">
+    <div className="w-full max-w-5xl mx-auto p-1 sm:p-2 md:p-4 h-[100dvh] sm:h-[90vh] flex flex-col">
+      <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col overflow-hidden w-full min-h-0">
         <ChatHeader
           isConnected={isConnected}
           username={username}
