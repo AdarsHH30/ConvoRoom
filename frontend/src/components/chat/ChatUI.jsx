@@ -311,12 +311,21 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 
     try {
-      // DON'T send via WebSocket for user messages to prevent echo
-      // The backend will handle broadcasting to other users
-
       setIsTyping(true);
 
-      // Send to API only
+      // Send via WebSocket for real-time broadcasting to other users
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(
+          JSON.stringify({
+            type: "chat_message",
+            message: messageToSend,
+            roomId,
+            username,
+          })
+        );
+      }
+
+      // Send to API for AI response
       const response = await fetch(`${BACKEND_URL}api/data/`, {
         method: "POST",
         headers: {
