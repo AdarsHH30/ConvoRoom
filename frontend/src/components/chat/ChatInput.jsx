@@ -14,17 +14,14 @@ export function ChatInput({
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       if (inputText.trim()) {
-        const _messageToSend = inputText;
-        setInputText("");
-        setTimeout(() => sendMessage(), 0);
+        sendMessage();
       }
     }
   };
 
   const handleSendClick = () => {
     if (inputText.trim()) {
-      setInputText("");
-      setTimeout(() => sendMessage(), 0);
+      sendMessage();
     }
   };
 
