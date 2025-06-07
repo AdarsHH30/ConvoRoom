@@ -332,7 +332,7 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: messageToSend,
+          message: `${username}: ${messageToSend}`,
           roomId,
           username,
         }),
