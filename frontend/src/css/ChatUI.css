@@ -143,6 +143,23 @@
   transition: height 0.2s;
 }
 
+/* Force override PlaceholdersAndVanishInput form styling */
+form.max-w-xl {
+  max-width: none !important;
+}
+
+form.mx-auto {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Target the specific form structure */
+.flex-1 form {
+  max-width: none !important;
+  margin: 0 !important;
+  width: 100% !important;
+}
+
 /* Toast notification */
 .toast-notification {
   position: fixed;

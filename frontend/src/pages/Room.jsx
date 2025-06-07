@@ -1,13 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ChatUI from "../components/chat/ChatUI";
-import { Link, ChevronLeft, Copy, Check } from "lucide-react";
+import { Link, ChevronLeft, Copy, Check, User } from "lucide-react";
+import { getUserIdentity } from "../utils/userIdentification";
 const Room = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
   const [linkCopied, setLinkCopied] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [username, setUsername] = useState("");
+
+  useEffect(() => {
+    const { username } = getUserIdentity();
+    setUsername(username);
+  }, []);
 
   const handleConnectionChange = (connected) => {
     setIsConnected(connected);
@@ -82,7 +89,29 @@ const Room = () => {
           </div>
         </div>
 
-        <div className="flex gap-1 sm:gap-2">
+        <div className="flex gap-1 sm:gap-2 items-center">
+          {/* Username display - only visible on desktop */}
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg mr-2">
+            <div className="flex items-center justify-center">
+              {username && (
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm sm:text-base">
+                    {username.charAt(0).toUpperCase()}
+                  </div>
+
+                  <div className="flex flex-col items-start">
+                    <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">
+                      Logged in as
+                    </div>
+                    <div className="text-sm sm:text-base font-semibold text-gray-800 dark:text-gray-200">
+                      {username}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           <button
             onClick={handleCopyLink}
             className="p-1.5 sm:p-2 flex items-center gap-1 sm:gap-2 text-white rounded-lg hover:bg-green-900 transition min-w-0"
