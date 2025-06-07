@@ -2,9 +2,13 @@ import { useState, useEffect } from "react";
 import { History, X, CirclePlus, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 export default function PastRooms({ showActionButtons = false }) {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
   const [userRooms, setUserRooms] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,7 +45,54 @@ export default function PastRooms({ showActionButtons = false }) {
   };
 
   const handleCreateRoom = () => {
-    navigate("/");
+    setIsLoading(true);
+    setErrorMessage("");
+
+    // console.log("Creating room with backend URL:", BACKEND_URL);
+
+    fetch(`${BACKEND_URL}api/create_room/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => {
+        console.log("Response status:", response.status);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Response data:", data);
+        if (data.roomId) {
+          const newRoom = {
+            id: data.roomId,
+            timestamp: new Date().toISOString(),
+          };
+
+          const existingRooms = JSON.parse(
+            localStorage.getItem("userRooms") || "[]"
+          );
+
+          localStorage.setItem(
+            "userRooms",
+            JSON.stringify([newRoom, ...existingRooms])
+          );
+
+          setIsLoading(false);
+          console.log("Navigating to room:", data.roomId);
+          navigate(`/room/${data.roomId}`);
+        } else {
+          setIsLoading(false);
+          setErrorMessage("Failed to create room. Please try again.");
+        }
+      })
+      .catch((error) => {
+        console.error("Error creating room:", error);
+        setErrorMessage("Something went wrong. Please try again.");
+        setIsLoading(false);
+      });
   };
 
   const handleJoinRoom = () => {
@@ -112,12 +163,48 @@ export default function PastRooms({ showActionButtons = false }) {
           {/* Action buttons - only show if showActionButtons is true */}
           {showActionButtons && (
             <div className="mb-6 flex flex-col gap-3">
+              {/* Error message display */}
+              {errorMessage && (
+                <div className="p-3 bg-red-900/20 border border-red-600/40 rounded-lg text-red-400 text-sm">
+                  {errorMessage}
+                </div>
+              )}
+              
               <button
                 onClick={handleCreateRoom}
-                className="w-full bg-green-800 hover:bg-green-700 text-white px-4 py-3 rounded-lg shadow-lg text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2"
+                disabled={isLoading}
+                className="w-full bg-green-800 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-3 rounded-lg shadow-lg text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2"
               >
-                <CirclePlus className="w-4 h-4" />
-                Create Room
+                {isLoading ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <CirclePlus className="w-4 h-4" />
+                    Create Room
+                  </>
+                )}
               </button>
 
               <button
