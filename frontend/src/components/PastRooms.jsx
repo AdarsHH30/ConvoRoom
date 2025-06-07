@@ -96,7 +96,7 @@ export default function PastRooms({ showActionButtons = false }) {
           <div className="flex items-center justify-between mb-8">
             <button
               onClick={() => navigate("/")}
-              className="text-white font-medium text-2xl sm:text-3xl flex items-center gap-3 hover:text-green-300 transition-colors duration-200 cursor-pointer"
+              className="text-white font-medium text-2xl sm:text-2xl flex items-center gap-3 hover:text-green-300 transition-colors duration-200 cursor-pointer"
             >
               <History size={28} className="text-green-400" />
               Recent Rooms
