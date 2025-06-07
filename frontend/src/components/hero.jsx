@@ -2,48 +2,30 @@
 
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { CirclePlus, UsersRound, History, X } from "lucide-react";
+import { CirclePlus, UsersRound, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import PastRooms from "./PastRooms";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 export default function Hero() {
   const [roomId, setRoomId] = useState("");
   const [isJoiningRoom, setIsJoiningRoom] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
-  const [userRooms, setUserRooms] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
 
+  // Check for tab=joinroom URL parameter on component mount
   useEffect(() => {
-    const loadUserRooms = () => {
-      try {
-        const storedRooms = localStorage.getItem("userRooms");
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get("tab");
 
-        if (storedRooms) {
-          const parsedRooms = JSON.parse(storedRooms);
-
-          const validRooms = parsedRooms.filter((room) => {
-            if (!room || !room.id) {
-              return false;
-            }
-            return true;
-          });
-
-          validRooms.sort(
-            (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
-          );
-
-          setUserRooms(validRooms);
-        }
-      } catch (_error) {
-        //console.error("Error loading user rooms:", _error);
-      }
-    };
-
-    loadUserRooms();
+    if (tab === "joinroom") {
+      setIsJoiningRoom(true);
+      // Clean up URL by removing the parameter
+      window.history.replaceState({}, document.title, "/");
+    }
   }, []);
 
   const createRoom = () => {
@@ -146,10 +128,6 @@ export default function Hero() {
     }
   };
 
-  const navigateToRoom = (roomIdToNavigate) => {
-    navigate(`/room/${roomIdToNavigate}`);
-  };
-
   const testLocalStorage = () => {
     try {
       localStorage.setItem("testKey", "testValue");
@@ -173,103 +151,8 @@ export default function Hero() {
 
   return (
     <div className="relative min-h-[calc(100vh-100px)] flex items-center justify-center w-full py-2 sm:py-4 md:py-8 px-1 sm:px-2 md:px-4">
-      {!isSidePanelOpen && (
-        <div className="fixed top-2 sm:top-4 left-2 sm:left-4 z-30 group">
-          <button
-            onClick={() => setIsSidePanelOpen(true)}
-            className="p-1.5 sm:p-2 rounded-md transition-all duration-300"
-            aria-label="Toggle history panel"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="sm:w-6 sm:h-6"
-            >
-              <rect
-                x="4"
-                y="4"
-                width="16"
-                height="16"
-                rx="2"
-                stroke="white"
-                strokeWidth="2"
-              />
-              <rect x="8" y="4" width="4" height="16" fill="white" />
-            </svg>
-          </button>
-
-          <div className="absolute left-full ml-1 sm:ml-2 top-1/2 -translate-y-1/2 px-1.5 sm:px-2 py-1 bg-zinc-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
-            Recent Rooms
-          </div>
-        </div>
-      )}
-
-      <div
-        className={`fixed left-0 top-0 h-full w-[240px] sm:w-[280px] bg-gradient-to-b from-[#0a0a0a] to-[#121212] border-r border-green-800/40 z-20 transition-all duration-300 overflow-y-auto shadow-xl scrollbar-hide ${
-          isSidePanelOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-        style={{
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-        }}
-      >
-        <div className="p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h3 className="text-green-700 font-semibold text-base sm:text-lg flex items-center gap-2">
-              <History size={18} className="text-green-500 sm:w-5 sm:h-5" />
-              Past Rooms
-            </h3>
-            <button
-              onClick={() => setIsSidePanelOpen(false)}
-              className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-green-800/20 transition-colors"
-            >
-              <X size={18} className="sm:w-5 sm:h-5" />
-            </button>
-          </div>
-
-          {userRooms && userRooms.length > 0 ? (
-            <div className="space-y-1.5 sm:space-y-2">
-              {userRooms.map((room) => (
-                <div
-                  key={room.id}
-                  onClick={() => navigateToRoom(room.id)}
-                  className="py-2.5 sm:py-3 px-2.5 sm:px-3 rounded-md cursor-pointer hover:bg-zinc-800/70 transition-all text-gray-300 truncate text-sm sm:text-base"
-                >
-                  {room.id}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center text-center p-4 sm:p-6">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-gray-500 mb-2 sm:mb-3 sm:w-6 sm:h-6"
-              >
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-              </svg>
-              <p className="text-gray-400 text-sm sm:text-base">
-                No rooms history found
-              </p>
-              <p className="text-gray-500 text-xs mt-1 sm:mt-2">
-                Create a room to get started
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Past Rooms Component */}
+      <PastRooms />
 
       <div className="container mx-auto relative z-10 px-2 sm:px-4">
         <div className="max-w-4xl mx-auto text-center">
@@ -279,7 +162,7 @@ export default function Hero() {
             transition={{ duration: 0.5 }}
             className="px-1 sm:px-2 md:px-4"
           >
-            <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-2 sm:mb-3 md:mb-4 leading-tight">
+            <h1 className="text-3xl xs:text-4xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-2 sm:mb-3 md:mb-4 leading-tight">
               Connecting team with AI
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-400 block sm:inline">

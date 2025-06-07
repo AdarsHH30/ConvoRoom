@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ChatUI from "../components/chat/ChatUI";
+import PastRooms from "../components/PastRooms";
 import { Link, ChevronLeft, Copy, Check, User } from "lucide-react";
 import { getUserIdentity } from "../utils/userIdentification";
 const Room = () => {
@@ -51,12 +52,15 @@ const Room = () => {
 
   return (
     <div className="w-full h-screen flex flex-col">
+      {/* Past Rooms Component with action buttons */}
+      <PastRooms showActionButtons={true} />
+
       <div className="flex justify-between items-center p-2 sm:p-4 bg-[var(--background)] border-b">
         <button
           onClick={() => navigate("/")}
           className="p-1.5 sm:p-2 flex items-center gap-1 sm:gap-2 text-white rounded-lg hover:bg-green-900 transition min-w-0"
         >
-          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+          {/* <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" /> */}
         </button>
 
         {/* Logo in center with online status */}
@@ -67,9 +71,12 @@ const Room = () => {
               alt="ConvoRoom logo"
               className="w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0"
             />
-            <span className="hidden sm:inline text-white font-semibold text-lg">
+            <button
+              onClick={() => navigate("/")}
+              className="hidden sm:inline text-white font-semibold text-lg hover:text-green-400 transition-colors cursor-pointer"
+            >
               ConvoRoom
-            </span>
+            </button>
             {/* Online status */}
             <div className="flex items-center gap-1 sm:gap-2 ml-1 sm:ml-2">
               <span
