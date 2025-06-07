@@ -41,30 +41,22 @@ export default function PastRooms({ showActionButtons = false }) {
   }, []);
 
   const navigateToRoom = (roomIdToNavigate) => {
+    setIsSidePanelOpen(false); // Close side panel when navigating
     navigate(`/room/${roomIdToNavigate}`);
   };
 
   const handleCreateRoom = () => {
     setIsLoading(true);
     setErrorMessage("");
-
-    // console.log("Creating room with backend URL:", BACKEND_URL);
-
+    
     fetch(`${BACKEND_URL}api/create_room/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
     })
-      .then((response) => {
-        console.log("Response status:", response.status);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
+      .then((response) => response.json())
       .then((data) => {
-        console.log("Response data:", data);
         if (data.roomId) {
           const newRoom = {
             id: data.roomId,
@@ -81,15 +73,16 @@ export default function PastRooms({ showActionButtons = false }) {
           );
 
           setIsLoading(false);
-          console.log("Navigating to room:", data.roomId);
-          navigate(`/room/${data.roomId}`);
+          setIsSidePanelOpen(false); // Close side panel when navigating
+          // Force page reload to ensure fresh state
+          window.location.href = `/room/${data.roomId}`;
         } else {
           setIsLoading(false);
           setErrorMessage("Failed to create room. Please try again.");
         }
       })
-      .catch((error) => {
-        console.error("Error creating room:", error);
+      .catch((_error) => {
+        //console.error("Error:", _error);
         setErrorMessage("Something went wrong. Please try again.");
         setIsLoading(false);
       });
