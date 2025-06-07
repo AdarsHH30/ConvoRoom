@@ -48,7 +48,7 @@ export default function PastRooms({ showActionButtons = false }) {
   const handleCreateRoom = () => {
     setIsLoading(true);
     setErrorMessage("");
-    
+
     fetch(`${BACKEND_URL}api/create_room/`, {
       method: "POST",
       headers: {
@@ -162,7 +162,7 @@ export default function PastRooms({ showActionButtons = false }) {
                   {errorMessage}
                 </div>
               )}
-              
+
               <button
                 onClick={handleCreateRoom}
                 disabled={isLoading}
