@@ -26,7 +26,7 @@ export function ChatInput({
   };
 
   return (
-    <div className="pt-6 pb-6 px-0 sm:p-2 md:p-3 bg-[var(--background)] w-full">
+    <div className="pt-0 pb-2 sm:pt-6 sm:pb-6 px-0 sm:p-2 md:p-3 bg-[var(--background)] w-full">
       <div className="flex items-center justify-center w-full px-4">
         <div className="flex items-center gap-2 w-full max-w-2xl">
           <div className="flex-1 relative">
@@ -67,7 +67,7 @@ export function ChatInput({
           </button>
         </div>
       </div>
-      <div className="mt-1 sm:mt-1.5 md:mt-2 text-xs text-gray-500 dark:text-gray-400 text-center">
+      <div className="mt-2 sm:mt-1.5 md:mt-2 text-xs text-gray-500 dark:text-gray-400 text-center px-4 pb-safe">
         Press Enter to send, Shift+Enter for new line
       </div>
     </div>

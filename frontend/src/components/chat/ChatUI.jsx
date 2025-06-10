@@ -409,8 +409,8 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-1 sm:p-2 md:p-4 h-[90vh] flex flex-col">
-      <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col overflow-hidden w-full">
+    <div className="w-full max-w-5xl mx-auto p-1 sm:p-2 md:p-4 h-[calc(100vh-8rem)] sm:h-[90vh] flex flex-col">
+      <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col overflow-hidden w-full min-h-0">
         <ChatHeader
           isConnected={isConnected}
           username={username}

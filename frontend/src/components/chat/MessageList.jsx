@@ -46,7 +46,7 @@ export function MessageList({
   return (
     <div
       ref={containerRef}
-      className="flex-1 overflow-auto p-2 sm:p-3 h-[calc(100%-56px)] w-full scrollbar-hide relative messages-container"
+      className="flex-1 overflow-auto p-2 sm:p-3 min-h-0 w-full scrollbar-hide relative messages-container"
       style={{
         scrollbarWidth: "none",
         msOverflowStyle: "none",

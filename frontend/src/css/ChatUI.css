@@ -187,4 +187,20 @@ form.mx-auto {
   .message-bubble {
     max-width: 85% !important;
   }
+  
+  /* Ensure instruction text is visible on mobile */
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
+  }
+  
+  /* Mobile chat input adjustments */
+  .chat-input-mobile {
+    margin-bottom: env(safe-area-inset-bottom, 0);
+  }
+  
+  /* Ensure chat container doesn't overflow viewport */
+  .chat-container-mobile {
+    max-height: calc(100vh - 4rem);
+    min-height: calc(100vh - 4rem);
+  }
 }
