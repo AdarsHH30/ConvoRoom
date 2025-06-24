@@ -76,9 +76,10 @@ export default function PastRooms({ showActionButtons = false }) {
 
         // Close side panel before navigating
         setIsSidePanelOpen(false);
-
-        // Navigate to the room (SPA-friendly)
         navigate(`/room/${data.roomId}`);
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
       } else {
         setErrorMessage("Failed to create room. Please try again.");
       }
