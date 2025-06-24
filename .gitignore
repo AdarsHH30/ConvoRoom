@@ -29,6 +29,7 @@ npm-debug.log
 yarn-error.log
 
 # Environment variables
+about.txt
 .env
 .env.local
 .env.development.local

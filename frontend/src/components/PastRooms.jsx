@@ -45,47 +45,48 @@ export default function PastRooms({ showActionButtons = false }) {
     navigate(`/room/${roomIdToNavigate}`);
   };
 
-  const handleCreateRoom = () => {
+  const handleCreateRoom = async () => {
     setIsLoading(true);
     setErrorMessage("");
 
-    fetch(`${BACKEND_URL}api/create_room/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.roomId) {
-          const newRoom = {
-            id: data.roomId,
-            timestamp: new Date().toISOString(),
-          };
+    try {
+      const response = await fetch(`${BACKEND_URL}api/create_room/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
 
+      const data = await response.json();
+
+      if (data.roomId) {
+        const newRoom = {
+          id: data.roomId,
+          timestamp: new Date().toISOString(),
+        };
+
+        // Update localStorage in background
+        setTimeout(() => {
           const existingRooms = JSON.parse(
             localStorage.getItem("userRooms") || "[]"
           );
-
           localStorage.setItem(
             "userRooms",
             JSON.stringify([newRoom, ...existingRooms])
           );
+        }, 0);
 
-          setIsLoading(false);
-          setIsSidePanelOpen(false); // Close side panel when navigating
-          // Force page reload to ensure fresh state
-          window.location.href = `/room/${data.roomId}`;
-        } else {
-          setIsLoading(false);
-          setErrorMessage("Failed to create room. Please try again.");
-        }
-      })
-      .catch((_error) => {
-        //console.error("Error:", _error);
-        setErrorMessage("Something went wrong. Please try again.");
-        setIsLoading(false);
-      });
+        // Close side panel before navigating
+        setIsSidePanelOpen(false);
+
+        // Navigate to the room (SPA-friendly)
+        navigate(`/room/${data.roomId}`);
+      } else {
+        setErrorMessage("Failed to create room. Please try again.");
+      }
+    } catch (error) {
+      setErrorMessage("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleJoinRoom = () => {

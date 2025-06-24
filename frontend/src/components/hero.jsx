@@ -13,6 +13,7 @@ export default function Hero() {
   const [isJoiningRoom, setIsJoiningRoom] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("");
 
   const navigate = useNavigate();
 
@@ -28,39 +29,50 @@ export default function Hero() {
     }
   }, []);
 
-  const createRoom = () => {
+  const createRoom = async () => {
     setIsLoading(true);
-    fetch(`${BACKEND_URL}api/create_room/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.roomId) {
-          const newRoom = {
-            id: data.roomId,
-            timestamp: new Date().toISOString(),
-          };
+    // Show a loading message that updates
+    setLoadingMessage("Connecting to server...");
 
-          const existingRooms = JSON.parse(
-            localStorage.getItem("userRooms") || "[]"
-          );
-
-          localStorage.setItem(
-            "userRooms",
-            JSON.stringify([newRoom, ...existingRooms])
-          );
-
-          navigate(`/room/${data.roomId}`);
-        }
-      })
-      .catch((_error) => {
-        //console.error("Error:", _error);
-        setErrorMessage("Something went wrong. Please try again.");
-        setIsLoading(false);
+    try {
+      // Make API call
+      setLoadingMessage("Creating your room...");
+      const response = await fetch(`${BACKEND_URL}api/create_room/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
+
+      const data = await response.json();
+
+      if (data.roomId) {
+        setLoadingMessage("Room created! Redirecting...");
+        const newRoom = {
+          id: data.roomId,
+          timestamp: new Date().toISOString(),
+        };
+
+        const existingRooms = JSON.parse(
+          localStorage.getItem("userRooms") || "[]"
+        );
+
+        localStorage.setItem(
+          "userRooms",
+          JSON.stringify([newRoom, ...existingRooms])
+        );
+
+        navigate(`/room/${data.roomId}`);
+      } else {
+        setErrorMessage(
+          data.error || "Something went wrong. Please try again."
+        );
+      }
+    } catch (error) {
+      setErrorMessage("Connection error. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const joinRoom = () => {
