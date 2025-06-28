@@ -140,6 +140,11 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
         return;
       }
 
+      // Skip history fetch for temporary rooms (during optimistic creation)
+      if (roomId.startsWith("temp_")) {
+        return;
+      }
+
       try {
         const userRooms = JSON.parse(localStorage.getItem("userRooms") || "[]");
         const thisRoom = userRooms.find((room) => room.id === roomId);

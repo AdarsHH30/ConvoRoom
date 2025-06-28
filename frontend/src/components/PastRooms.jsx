@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import { History, X, CirclePlus, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useQuickCreateRoom } from "../hooks/useQuickCreateRoom";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 export default function PastRooms({ showActionButtons = false }) {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
   const [userRooms, setUserRooms] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
+  const { createRoom, isCreating } = useQuickCreateRoom();
 
   useEffect(() => {
     const loadUserRooms = () => {
@@ -41,53 +42,15 @@ export default function PastRooms({ showActionButtons = false }) {
   }, []);
 
   const navigateToRoom = (roomIdToNavigate) => {
-    setIsSidePanelOpen(false); // Close side panel when navigating
+    setIsSidePanelOpen(false);
     navigate(`/room/${roomIdToNavigate}`);
+    window.location.reload(true);
   };
 
-  const handleCreateRoom = async () => {
-    setIsLoading(true);
-    setErrorMessage("");
-
-    try {
-      const response = await fetch(`${BACKEND_URL}api/create_room/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      const data = await response.json();
-
-      if (data.roomId) {
-        const newRoom = {
-          id: data.roomId,
-          timestamp: new Date().toISOString(),
-        };
-
-        // Update localStorage in background
-        setTimeout(() => {
-          const existingRooms = JSON.parse(
-            localStorage.getItem("userRooms") || "[]"
-          );
-          localStorage.setItem(
-            "userRooms",
-            JSON.stringify([newRoom, ...existingRooms])
-          );
-        }, 0);
-
-        // Close side panel before navigating
-        setIsSidePanelOpen(false);
-        navigate(`/room/${data.roomId}`);
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
-      } else {
-        setErrorMessage("Failed to create room. Please try again.");
-      }
-    } catch (error) {
-      setErrorMessage("Something went wrong. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+  const handleCreateRoom = () => {
+    setIsSidePanelOpen(false); // Close side panel
+    createRoom();
+    window.location.reload(true);
   };
 
   const handleJoinRoom = () => {
@@ -167,10 +130,10 @@ export default function PastRooms({ showActionButtons = false }) {
 
               <button
                 onClick={handleCreateRoom}
-                disabled={isLoading}
+                disabled={isCreating}
                 className="w-full bg-green-800 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-3 rounded-lg shadow-lg text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2"
               >
-                {isLoading ? (
+                {isCreating ? (
                   <>
                     <svg
                       className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"

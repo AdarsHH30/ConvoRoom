@@ -5,12 +5,35 @@ import PastRooms from "../components/PastRooms";
 import { Link, ChevronLeft, Copy, Check, User } from "lucide-react";
 import { getUserIdentity } from "../utils/userIdentification";
 const Room = () => {
-  const { roomId } = useParams();
+  const { roomId: urlRoomId } = useParams();
   const navigate = useNavigate();
   const [linkCopied, setLinkCopied] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [username, setUsername] = useState("");
+  const [actualRoomId, setActualRoomId] = useState(urlRoomId);
+
+  useEffect(() => {
+    const { username } = getUserIdentity();
+    setUsername(username);
+  }, []);
+
+  // Listen for room ID updates (for optimistic room creation)
+  useEffect(() => {
+    const handleRoomIdUpdate = (event) => {
+      const { newRoomId, tempRoomId } = event.detail;
+      if (urlRoomId === tempRoomId) {
+        setActualRoomId(newRoomId);
+      }
+    };
+
+    window.addEventListener("roomIdUpdated", handleRoomIdUpdate);
+    return () =>
+      window.removeEventListener("roomIdUpdated", handleRoomIdUpdate);
+  }, [urlRoomId]);
+
+  // Use the actual room ID (which might be different from URL during optimistic creation)
+  const roomId = actualRoomId || urlRoomId;
 
   useEffect(() => {
     const { username } = getUserIdentity();

@@ -6,6 +6,7 @@ import { CirclePlus, UsersRound, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PastRooms from "./PastRooms";
+import { useQuickCreateRoom } from "../hooks/useQuickCreateRoom";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 export default function Hero() {
@@ -13,9 +14,9 @@ export default function Hero() {
   const [isJoiningRoom, setIsJoiningRoom] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState("");
 
   const navigate = useNavigate();
+  const { createRoom, isCreating } = useQuickCreateRoom();
 
   // Check for tab=joinroom URL parameter on component mount
   useEffect(() => {
@@ -29,51 +30,20 @@ export default function Hero() {
     }
   }, []);
 
-  const createRoom = async () => {
-    setIsLoading(true);
-    // Show a loading message that updates
-    setLoadingMessage("Connecting to server...");
-
-    try {
-      // Make API call
-      setLoadingMessage("Creating your room...");
-      const response = await fetch(`${BACKEND_URL}api/create_room/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const data = await response.json();
-
-      if (data.roomId) {
-        setLoadingMessage("Room created! Redirecting...");
-        const newRoom = {
-          id: data.roomId,
-          timestamp: new Date().toISOString(),
-        };
-
-        const existingRooms = JSON.parse(
-          localStorage.getItem("userRooms") || "[]"
-        );
-
-        localStorage.setItem(
-          "userRooms",
-          JSON.stringify([newRoom, ...existingRooms])
-        );
-
-        navigate(`/room/${data.roomId}`);
-      } else {
-        setErrorMessage(
-          data.error || "Something went wrong. Please try again."
-        );
+  // Add keyboard shortcut (Ctrl/Cmd + K) for quick room creation
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "k") {
+        event.preventDefault();
+        if (!isCreating && !isJoiningRoom) {
+          createRoom();
+        }
       }
-    } catch (error) {
-      setErrorMessage("Connection error. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isCreating, isJoiningRoom, createRoom]);
 
   const joinRoom = () => {
     setIsJoiningRoom(true);
@@ -300,11 +270,11 @@ export default function Hero() {
                 <Button
                   size="lg"
                   onClick={createRoom}
-                  disabled={isLoading}
+                  disabled={isCreating}
                   className="w-full sm:w-auto bg-green-800 hover:bg-green-700 text-white px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 lg:py-4 rounded-lg shadow-lg text-xs sm:text-sm md:text-base min-w-[120px] sm:min-w-[140px]"
                 >
                   <CirclePlus className="mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
-                  {isLoading ? "Creating..." : "Create Room"}
+                  {isCreating ? "Creating..." : "Create Room"}
                 </Button>
                 <Button
                   onClick={joinRoom}
