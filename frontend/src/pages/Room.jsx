@@ -121,23 +121,31 @@ const Room = () => {
 
           <button
             onClick={handleCopyLink}
-            className="p-1.5 sm:p-2 flex items-center gap-1 sm:gap-2 text-white rounded-lg hover:bg-green-900 transition min-w-0"
+            className="p-1.5 sm:p-2 flex items-center gap-1 sm:gap-2 text-white rounded-lg hover:bg-green-900 transition min-w-0 relative group"
+            title="Copy room link"
           >
             {linkCopied ? (
               <Check className="w-4 h-4 sm:w-5 sm:h-5" />
             ) : (
               <Link className="w-4 h-4 sm:w-5 sm:h-5" />
             )}
+            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity">
+              Copy room link
+            </span>
           </button>
           <button
             onClick={handleCopyInvite}
-            className="p-1.5 sm:p-2 flex items-center gap-1 sm:gap-2 text-white rounded-lg hover:bg-green-900 transition min-w-0"
+            className="p-1.5 sm:p-2 flex items-center gap-1 sm:gap-2 text-white rounded-lg hover:bg-green-900 transition min-w-0 relative group"
+            title="Copy room ID"
           >
             {inviteCopied ? (
               <Check className="w-4 h-4 sm:w-5 sm:h-5" />
             ) : (
               <Copy className="w-4 h-4 sm:w-5 sm:h-5" />
             )}
+            <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity">
+              Copy room ID
+            </span>
           </button>
         </div>
       </div>
