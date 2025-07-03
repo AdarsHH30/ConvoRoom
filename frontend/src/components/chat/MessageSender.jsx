@@ -1,68 +1,99 @@
-import React, { useMemo } from "react";
+import React, { useCallback, forwardRef, useImperativeHandle } from "react";
+import { createMessageObject } from "../../utils/messageUtils";
 
-function MessageSender({ name = "Unknown", isAI = false }) {
-  const getInitials = (name) => {
-    if (!name || name === "Unknown") return "U";
-    return name
-      .replace(/[^\w\s]/gi, "")
-      .trim()
-      .substring(0, 2)
-      .toUpperCase();
-  };
+const MessageSender = forwardRef(
+  (
+    {
+      backendUrl,
+      roomId,
+      username,
+      wsRef,
+      onMessageSent,
+      onTypingChange,
+      onError,
+    },
+    ref
+  ) => {
+    const sendMessage = useCallback(
+      async (messageText) => {
+        if (!messageText.trim() || !username) return;
 
-  const getUserColor = useMemo(() => {
-    if (isAI) return null;
+        const messageToSend = messageText.trim();
+        const userMessage = createMessageObject(username, messageToSend);
 
-    const hashCode = (str) => {
-      let hash = 0;
-      for (let i = 0; i < str.length; i++) {
-        hash = (hash << 5) - hash + str.charCodeAt(i);
-        hash = hash & hash;
-      }
-      return Math.abs(hash);
-    };
+        // Add user message immediately
+        onMessageSent(userMessage);
 
-    const colors = [
-      "bg-blue-600",
-      "bg-green-600",
-      "bg-red-600",
-      "bg-indigo-600",
-      "bg-pink-600",
-      "bg-purple-600",
-      "bg-teal-600",
-      "bg-orange-600",
-      "bg-cyan-600",
-    ];
+        try {
+          onTypingChange(true);
 
-    const colorIndex = hashCode(name) % colors.length;
-    return colors[colorIndex];
-  }, [name, isAI]);
+          // Send via WebSocket
+          if (wsRef.current?.readyState === WebSocket.OPEN) {
+            wsRef.current.send(
+              JSON.stringify({
+                type: "chat_message",
+                message: messageToSend,
+                roomId,
+                username,
+              })
+            );
+          }
 
-  const containerClass = `flex items-center mb-1 ${
-    isAI ? "justify-start" : "justify-end"
-  }`;
+          // Send to API
+          const response = await fetch(`${backendUrl}api/data/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: `${username}: ${messageToSend}`,
+              roomId,
+              username,
+            }),
+          });
 
-  const nameClass = `text-sm font-medium px-2 py-0.5 ${
-    isAI ? "ml-2" : "mr-2"
-  } ${
-    isAI
-      ? "text-purple-700 dark:text-purple-300"
-      : "text-blue-700 dark:text-blue-300"
-  }`;
+          if (!response.ok) {
+            throw new Error(
+              `API Error: ${response.status} ${response.statusText}`
+            );
+          }
 
-  const avatarClass = `flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium text-white ${
-    isAI
-      ? "bg-purple-700 dark:bg-purple-800"
-      : getUserColor + " dark:" + getUserColor
-  }`;
+          const apiData = await response.json();
+          const aiResponse = apiData?.response;
 
-  return (
-    <div className={containerClass}>
-      {!isAI && <div className={nameClass}>{name}</div>}
-      <div className={avatarClass}>{isAI ? "AI" : getInitials(name)}</div>
-      {isAI && <div className={nameClass}>{name}</div>}
-    </div>
-  );
-}
+          if (aiResponse) {
+            const aiMessage = createMessageObject("AI", aiResponse);
+            onMessageSent(aiMessage);
+          }
+        } catch (error) {
+          console.error("Message sending failed:", error);
+          onError(userMessage.id);
+          window.showToast?.("Failed to send message. Please try again.");
+        } finally {
+          onTypingChange(false);
+        }
+      },
+      [
+        backendUrl,
+        roomId,
+        username,
+        wsRef,
+        onMessageSent,
+        onTypingChange,
+        onError,
+      ]
+    );
 
-export default React.memo(MessageSender);
+    useImperativeHandle(
+      ref,
+      () => ({
+        sendMessage,
+      }),
+      [sendMessage]
+    );
+
+    return null; // This is a logic-only component
+  }
+);
+
+MessageSender.displayName = "MessageSender";
+
+export default MessageSender;

@@ -1,376 +1,282 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+"use client";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+  lazy,
+  Suspense,
+} from "react";
 import { flushSync } from "react-dom";
-import { ChatHeader } from "./chat/ChatHeader";
-import { MessageList } from "./chat/MessageList";
-import { ChatInput } from "./chat/ChatInput";
+import { getUserIdentity } from "../utils/userIdentification";
 
+// Custom hooks
+import { useWebSocket } from "../hooks/useWebSocket";
+import { useMessageDeduplication } from "../hooks/useMessageDeduplication";
+import { useChatHistory } from "../hooks/useChatHistory";
+import { useRecentRooms } from "../hooks/useRecentRooms";
+import { createMessageObject } from "../utils/messageUtils";
+
+// Components
+import LoadingSpinner from "./chat/LoadingSpinner";
+import ToastManager from "./chat/ToastManager";
+import MessageSender from "./chat/MessageSender";
+
+// Lazy load components
+const ChatHeader = lazy(() =>
+  import("./chat/ChatHeader").then((module) => ({ default: module.ChatHeader }))
+);
+const MessageList = lazy(() =>
+  import("./chat/MessageList").then((module) => ({
+    default: module.MessageList,
+  }))
+);
+const ChatInput = lazy(() =>
+  import("./chat/ChatInput").then((module) => ({ default: module.ChatInput }))
+);
+
+// Constants
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const VITE_WS_API = import.meta.env.VITE_WS_API;
+const MESSAGE_DEDUPE_WINDOW = 5000;
 
-function ChatUI() {
-  const [messages, setMessages] = useState([]);
+function ChatUI({ roomId: propRoomId, onConnectionChange }) {
+  // State management
   const [inputText, setInputText] = useState("");
-  const [isConnected, setIsConnected] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [recentRooms, setRecentRooms] = useState([]);
   const [showRecentRooms, setShowRecentRooms] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
-  const [username, _setUsername] = useState(() => {
-    // Get username from localStorage or use "User" as fallback
-    return localStorage.getItem("username") || "User";
-  });
+  const [username, setUsername] = useState("");
+
+  // Refs
   const messagesEndRef = useRef(null);
   const wsRef = useRef(null);
-  const messageTracker = useRef(new Set());
-  const roomId = window.location.pathname.split("/").pop();
-  // const roomName = `Room ${roomId}`;
+  const messageSenderRef = useRef(null);
 
-  useEffect(() => {
-    const loadRecentRooms = () => {
-      const rooms = JSON.parse(localStorage.getItem("recentRooms")) || [];
-      setRecentRooms(rooms);
-    };
+  // Memoized values
+  const roomId = useMemo(
+    () => propRoomId || window.location.pathname.split("/").pop(),
+    [propRoomId]
+  );
 
-    loadRecentRooms();
-  }, []);
-
-  useEffect(() => {
-    const saveRoomToRecent = () => {
-      let rooms = JSON.parse(localStorage.getItem("recentRooms")) || [];
-      rooms = rooms.filter((room) => room.id !== roomId);
-      rooms.unshift({ id: roomId, name: `Room ${roomId}` });
-      if (rooms.length > 5) {
-        rooms.pop();
-      }
-      localStorage.setItem("recentRooms", JSON.stringify(rooms));
-      setRecentRooms(rooms);
-    };
-
-    if (roomId) {
-      saveRoomToRecent();
-    }
+  const wsUrl = useMemo(() => {
+    let url = VITE_WS_API;
+    if (!url.endsWith("/")) url += "/";
+    return `${url}ws/room/${roomId}/`;
   }, [roomId]);
 
-  const navigateToRoom = (roomIdToNavigate) => {
-    window.location.href = `/room/${roomIdToNavigate}`;
-  };
+  // Custom hooks
+  const { checkDuplicate } = useMessageDeduplication();
+  const { recentRooms } = useRecentRooms(roomId);
+  const { messages, setMessages, isLoadingHistory } = useChatHistory(
+    roomId,
+    username,
+    BACKEND_URL
+  );
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    setShowScrollButton(false);
-  };
-
-  const extractLanguage = (text) => {
-    if (!text.startsWith("```")) return null;
-    const firstLine = text.split("\n")[0];
-    return firstLine.slice(3).trim() || null;
-  };
-
-  const parseMessageContent = (text) => {
-    if (!text) return [{ type: "text", content: "" }];
-
-    const regex = /```([\w]*)\n([\s\S]*?)\n```/g;
-    const parts = [];
-    let lastIndex = 0;
-    let match;
-
-    while ((match = regex.exec(text)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push({
-          type: "text",
-          content: text.substring(lastIndex, match.index),
-        });
-      }
-
-      parts.push({
-        type: "code",
-        language: match[1] || "jsx",
-        content: match[2],
-      });
-
-      lastIndex = match.index + match[0].length;
-    }
-
-    if (lastIndex < text.length) {
-      parts.push({
-        type: "text",
-        content: text.substring(lastIndex),
-      });
-    }
-
-    return parts.length > 0 ? parts : [{ type: "text", content: text }];
-  };
-
-  useEffect(() => {
-    const fetchChatHistory = async () => {
-      try {
-        const userRooms = JSON.parse(localStorage.getItem("userRooms") || "[]");
-        const thisRoom = userRooms.find((room) => room.id === roomId);
-        if (thisRoom) {
-          const creationTime = new Date(thisRoom.timestamp).getTime();
-          const now = new Date().getTime();
-          const isNewRoom = now - creationTime < 2000;
-
-          if (isNewRoom) {
-            return;
-          }
-        }
-
-        const response = await fetch(
-          `${BACKEND_URL}api/get_chat_history/${roomId}/`
-        );
-        if (!response.ok) throw new Error("Failed to fetch chat history");
-
-        const data = await response.json();
-
-        const formattedMessages = data.messages.map((msg) => ({
-          id: `${msg.sender}-${msg.timestamp}`,
-          sender: msg.sender,
-          text: msg.message,
-          timestamp: msg.timestamp,
-          isCode:
-            msg.sender === "AI" &&
-            msg.message.startsWith("```") &&
-            msg.message.endsWith("```"),
-          language: msg.sender === "AI" ? extractLanguage(msg.message) : null,
-          hasCodeBlocks: msg.sender === "AI" && msg.message.includes("```"),
-          parsedContent:
-            msg.sender === "AI" ? parseMessageContent(msg.message) : null,
-        }));
-
-        setMessages(formattedMessages);
-      } catch (_error) {
-        //console.error("Error fetching chat history:", _error);
-      }
-    };
-
-    if (roomId && username) {
-      fetchChatHistory();
-    }
-  }, [roomId, username, extractLanguage, parseMessageContent]);
-
+  // WebSocket message handler
   const handleWebSocketMessage = useCallback(
     (event) => {
       try {
         const data = JSON.parse(event.data);
+
         if (data.type !== "chat_message") return;
 
         const messageSender = data.username || "Unknown";
+        if (messageSender === username) return;
 
-        const contentId = `${messageSender}-${data.message}`;
-        if (messageTracker.current.has(contentId)) return;
-        messageTracker.current.add(contentId);
+        const messageKey = `${messageSender}-${data.message}`;
+        if (checkDuplicate(messageKey)) return;
 
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `${contentId}-${Date.now()}`,
-            sender: messageSender,
-            text: data.message,
-            timestamp: new Date().toISOString(),
-            isCode:
-              messageSender === "AI" &&
-              data.message.startsWith("```") &&
-              data.message.endsWith("```"),
-            language:
-              messageSender === "AI" ? extractLanguage(data.message) : null,
-            hasCodeBlocks:
-              messageSender === "AI" && data.message.includes("```"),
-            parsedContent:
-              messageSender === "AI" ? parseMessageContent(data.message) : null,
-          },
-        ]);
+        const newMessage = createMessageObject(messageSender, data.message);
+
+        setMessages((prev) => {
+          const isDuplicate = prev.some(
+            (msg) =>
+              msg.sender === messageSender &&
+              msg.text === data.message &&
+              Math.abs(new Date(msg.timestamp).getTime() - Date.now()) <
+                MESSAGE_DEDUPE_WINDOW
+          );
+
+          if (isDuplicate) return prev;
+          return [...prev, newMessage];
+        });
 
         if (!showScrollButton) {
-          scrollToBottom();
+          requestAnimationFrame(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+          });
         }
-      } catch (_error) {
-        //console.error("WebSocket message parsing error:", _error);
+      } catch (error) {
+        console.error("WebSocket message parsing error:", error);
       }
     },
-    [showScrollButton, extractLanguage, parseMessageContent, scrollToBottom]
+    [username, checkDuplicate, setMessages, showScrollButton]
   );
 
+  // WebSocket connection
+  const { isConnected, wsRef: hookWsRef } = useWebSocket(
+    wsUrl,
+    username,
+    roomId,
+    handleWebSocketMessage,
+    onConnectionChange
+  );
+
+  // Use the wsRef from the hook
+  wsRef.current = hookWsRef.current;
+
+  // Initialize username
   useEffect(() => {
-    if (!username) return;
-
-    const ws = new WebSocket(`${VITE_WS_API}ws/room/${roomId}/`);
-    wsRef.current = ws;
-
-    ws.onopen = () => setIsConnected(true);
-    ws.onmessage = handleWebSocketMessage;
-    ws.onerror = () => setIsConnected(false);
-    ws.onclose = () => setIsConnected(false);
-
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close(1000, "Component unmounted");
+    const initializeUser = async () => {
+      try {
+        const { username: storedUsername } = getUserIdentity();
+        setUsername(storedUsername);
+      } catch (error) {
+        console.error("Error loading user identity:", error);
       }
     };
-  }, [roomId, handleWebSocketMessage, username]);
+    initializeUser();
+  }, []);
 
-  const sendMessage = useCallback(async () => {
+  // Message handlers
+  const handleMessageSent = useCallback(
+    (message) => {
+      setMessages((prev) => [...prev, message]);
+      requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      });
+    },
+    [setMessages]
+  );
+
+  const handleSendError = useCallback(
+    (messageId) => {
+      setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
+    },
+    [setMessages]
+  );
+
+  const handleSendMessage = useCallback(async () => {
     if (!inputText.trim() || isSending || !isConnected || !username) return;
 
-    const messageToSend = inputText;
+    const messageText = inputText;
 
     flushSync(() => {
       setInputText("");
+      setIsSending(true);
     });
 
-    setIsSending(true);
-
-    const contentId = `${username}-${messageToSend}`;
-    const messageData = {
-      id: `${contentId}-${Date.now()}`,
-      sender: username,
-      text: messageToSend,
-      timestamp: new Date().toISOString(),
-      isCode: false,
-    };
-
-    if (!messageTracker.current.has(contentId)) {
-      messageTracker.current.add(contentId);
-      setMessages((prev) => [...prev, messageData]);
-      scrollToBottom();
-    }
-
     try {
-      wsRef.current?.send(
-        JSON.stringify({
-          type: "chat_message",
-          message: messageToSend,
-          roomId,
-          username,
-        })
-      );
-
-      setIsTyping(true);
-
-      const response = await fetch(`${BACKEND_URL}api/data/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: messageToSend,
-          roomId,
-          username,
-        }),
-      });
-
-      if (!response.ok) throw new Error("API response not OK");
-
-      const data = await response.json();
-      const aiResponse = data?.response;
-
-      setIsTyping(false);
-
-      if (aiResponse) {
-        const aiContentId = `AI-${aiResponse}`;
-        if (!messageTracker.current.has(aiContentId)) {
-          messageTracker.current.add(aiContentId);
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `${aiContentId}-${Date.now()}`,
-              sender: "AI",
-              text: aiResponse,
-              timestamp: new Date().toISOString(),
-              isCode:
-                aiResponse.startsWith("```") && aiResponse.endsWith("```"),
-              language: extractLanguage(aiResponse),
-              hasCodeBlocks: aiResponse.includes("```"),
-              parsedContent: parseMessageContent(aiResponse),
-            },
-          ]);
-          scrollToBottom();
-        }
-      }
-    } catch (_error) {
-      //console.error("Message sending failed:", _error);
-      setMessages((prev) => prev.filter((msg) => msg.id !== messageData.id));
-      setIsTyping(false);
+      await messageSenderRef.current?.sendMessage(messageText);
+    } catch (error) {
+      console.error("Send message error:", error);
     } finally {
       setIsSending(false);
     }
-  }, [
-    inputText,
-    isSending,
-    isConnected,
-    roomId,
-    username,
-    extractLanguage,
-    parseMessageContent,
-    scrollToBottom,
-  ]);
+  }, [inputText, isSending, isConnected, username]);
 
-  const copyToClipboard = (text) => {
-    const cleanedText = text.replace(/^```[\w]*\n|\n```$/g, "");
-    navigator.clipboard.writeText(cleanedText);
-
-    const toast = document.createElement("div");
-    toast.textContent = "Copied to clipboard!";
-    toast.className =
-      "fixed bottom-4 right-4 bg-black text-white py-2 px-4 rounded-md z-50 animate-fade-in";
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-      toast.classList.add("animate-fade-out");
-      setTimeout(() => {
-        if (document.body.contains(toast)) {
-          document.body.removeChild(toast);
-        }
-      }, 300);
-    }, 1500);
-  };
-
-  useEffect(() => {
-    // Check if username exists in localStorage
-    const storedUsername = localStorage.getItem("username");
-
-    // If no username found, prompt the user and store it
-    if (!storedUsername) {
-      const newUsername = prompt("Please enter your username:", "User");
-      if (newUsername && newUsername.trim()) {
-        localStorage.setItem("username", newUsername.trim());
-      } else {
-        localStorage.setItem("username", "User");
-      }
+  // Copy function
+  const copyToClipboard = useCallback(async (text) => {
+    try {
+      const cleanedText = text.replace(/^```[\w]*\n|\n```$/g, "");
+      await navigator.clipboard.writeText(cleanedText);
+      window.showToast?.("Copied to clipboard!");
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
+      window.showToast?.("Failed to copy to clipboard");
     }
   }, []);
 
+  // Navigation helper
+  const navigateToRoom = useCallback((id) => {
+    window.location.pathname = `/room/${id}`;
+  }, []);
+
+  // Memoized props
+  const chatHeaderProps = useMemo(
+    () => ({
+      isConnected,
+      username,
+      recentRooms,
+      showRecentRooms,
+      setShowRecentRooms,
+      navigateToRoom,
+    }),
+    [isConnected, username, recentRooms, showRecentRooms, navigateToRoom]
+  );
+
+  const messageListProps = useMemo(
+    () => ({
+      messages,
+      isTyping,
+      username,
+      copyToClipboard,
+      showScrollButton,
+      setShowScrollButton,
+    }),
+    [messages, isTyping, username, copyToClipboard, showScrollButton]
+  );
+
+  const chatInputProps = useMemo(
+    () => ({
+      inputText,
+      setInputText,
+      sendMessage: handleSendMessage,
+      isSending,
+      isConnected,
+      username,
+      isEmpty: messages.length === 0,
+    }),
+    [
+      inputText,
+      handleSendMessage,
+      isSending,
+      isConnected,
+      username,
+      messages.length,
+    ]
+  );
+
+  if (isLoadingHistory) {
+    return <LoadingSpinner text="Loading chat history..." />;
+  }
+
   return (
-    <div className="w-full max-w-5xl mx-auto p-2 md:p-4 h-[90vh] flex flex-col">
-      <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col overflow-hidden w-full">
-        <ChatHeader
-          isConnected={isConnected}
-          username={username}
-          recentRooms={recentRooms}
-          showRecentRooms={showRecentRooms}
-          setShowRecentRooms={setShowRecentRooms}
-          navigateToRoom={navigateToRoom}
-        />
+    <>
+      <div className="w-full max-w-5xl mx-auto p-1 sm:p-2 md:p-4 h-[calc(100vh-8rem)] sm:h-[90vh] flex flex-col">
+        <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col overflow-hidden w-full min-h-0">
+          <Suspense fallback={<LoadingSpinner />}>
+            <ChatHeader {...chatHeaderProps} />
+          </Suspense>
 
-        <MessageList
-          messages={messages}
-          isTyping={isTyping}
-          username={username}
-          copyToClipboard={copyToClipboard}
-          showScrollButton={showScrollButton}
-          setShowScrollButton={setShowScrollButton}
-        />
+          <Suspense fallback={<LoadingSpinner />}>
+            <MessageList {...messageListProps} />
+            <div ref={messagesEndRef} />
+          </Suspense>
 
-        <ChatInput
-          inputText={inputText}
-          setInputText={setInputText}
-          sendMessage={sendMessage}
-          isSending={isSending}
-          isConnected={isConnected}
-          username={username}
-          isEmpty={messages.length === 0}
-        />
+          <Suspense fallback={<LoadingSpinner />}>
+            <ChatInput {...chatInputProps} />
+          </Suspense>
+        </div>
       </div>
-    </div>
+
+      <MessageSender
+        ref={messageSenderRef}
+        backendUrl={BACKEND_URL}
+        roomId={roomId}
+        username={username}
+        wsRef={wsRef}
+        onMessageSent={handleMessageSent}
+        onTypingChange={setIsTyping}
+        onError={handleSendError}
+      />
+
+      <ToastManager />
+    </>
   );
 }
 

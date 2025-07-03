@@ -3,7 +3,7 @@ import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CodeBlock } from "@/components/ui/code-block";
-import MessageSender from "./MessageSender";
+import UserAvatar from "./UserAvatar";
 import { MessageActions } from "./MessageActions";
 
 export function MessageDisplay({ message, username, copyToClipboard }) {
@@ -14,7 +14,7 @@ export function MessageDisplay({ message, username, copyToClipboard }) {
     <div
       className={`flex flex-col ${isAIMessage ? "items-start" : "items-end"}`}
     >
-      <MessageSender name={message.sender} isAI={isAIMessage} />
+      <UserAvatar name={message.sender} isAI={isAIMessage} />
 
       <div
         className={`max-w-[85%] md:max-w-[80%] p-2.5 rounded-2xl message-bubble overflow-hidden ${
