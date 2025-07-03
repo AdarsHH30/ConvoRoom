@@ -98,7 +98,7 @@
 } 
 
 body {
-  background-color: #111111;
+  background-color: #191a1a;
   min-height: 100vh;
   width: 100%;
   position: fixed;
@@ -141,7 +141,7 @@ body {
   position: fixed;
   width: 20px;
   height: 20px;
-  background: linear-gradient(200deg, #00ff00, #ffffff);
+  background: linear-gradient(200deg, #345234, #ffffff);
   border-radius: 50%;
   pointer-events: none;
   transform: translate(-50%, -50%);

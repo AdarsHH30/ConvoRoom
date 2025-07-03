@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { CirclePlus, UsersRound, X } from "lucide-react";
@@ -7,7 +6,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PastRooms from "./PastRooms";
 import { useQuickCreateRoom } from "../hooks/useQuickCreateRoom";
-import { Intro } from "@/components/hero/LandingIntro";
+import { lazy, Suspense } from "react";
+const Intro = lazy(() =>
+  import("@/components/hero/LandingIntro").then((module) => ({
+    default: module.Intro,
+  }))
+);
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 export default function Hero() {
