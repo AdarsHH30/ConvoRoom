@@ -7,7 +7,7 @@ import "./App.css";
 function App() {
   return (
     <BrowserRouter>
-      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/room/:roomId" element={<Room />} />
