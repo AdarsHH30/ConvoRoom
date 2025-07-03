@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import ChatUI from "../components/chat/ChatUI";
+import ChatUI from "../components/ChatUI";
 import PastRooms from "../components/PastRooms";
 import { Link, ChevronLeft, Copy, Check, User } from "lucide-react";
 import { getUserIdentity } from "../utils/userIdentification";
