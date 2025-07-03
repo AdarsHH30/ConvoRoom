@@ -3,7 +3,7 @@
 import { Footer } from "@/components/Footer";
 import ParticlesBackground from "@/components/ui/particles";
 
-import Hero from "@/components/hero";
+import Hero from "@/components/Hero";
 
 export default function Home() {
   return (
@@ -11,7 +11,6 @@ export default function Home() {
       <div className="relative z-10 w-full flex-1 flex flex-col justify-between items-center">
         <div className="w-full flex-grow flex items-center justify-center px-2 sm:px-4">
           <ParticlesBackground />
-
           <Hero />
         </div>
       </div>
