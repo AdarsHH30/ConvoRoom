@@ -85,7 +85,12 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
         if (data.type !== "chat_message") return;
 
         const messageSender = data.username || "Unknown";
+
+        // Skip messages from current user (already handled locally)
         if (messageSender === username) return;
+
+        // Skip AI messages (they're handled by the MessageSender component)
+        if (messageSender === "AI") return;
 
         const messageKey = `${messageSender}-${data.message}`;
         if (checkDuplicate(messageKey)) return;
