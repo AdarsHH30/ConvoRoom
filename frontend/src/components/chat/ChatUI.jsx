@@ -104,8 +104,18 @@ const showToast = (message, duration = TOAST_DURATION) => {
 
 // Loading component
 const LoadingSpinner = () => (
-  <div className="flex items-center justify-center p-4">
-    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+  <div className="flex items-center justify-center min-h-screen bg-transparent">
+    <div className="w-full max-w-5xl mx-auto p-2 md:p-4 h-[90vh] flex items-center justify-center">
+      <BoxesLoader
+        boxColor={"#4ade80"}
+        shadowColor={"#999999"}
+        desktopSize={"150px"}
+        mobileSize={"80px"}
+        background={"transparent"}
+        text="Connecting ..."
+        textColor="#4ade80"
+      />{" "}
+    </div>
   </div>
 );
 
@@ -498,15 +508,17 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
   if (isLoadingHistory) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-transparent">
-        <BoxesLoader
-          boxColor={"#4ade80"}
-          shadowColor={"#999999"}
-          desktopSize={"150px"}
-          mobileSize={"80px"}
-          background={"transparent"}
-          text="Connecting ..."
-          textColor="#4ade80"
-        />{" "}
+        <div className="w-full max-w-5xl mx-auto p-2 md:p-4 h-[90vh] flex items-center justify-center">
+          <BoxesLoader
+            boxColor={"#4ade80"}
+            shadowColor={"#999999"}
+            desktopSize={"150px"}
+            mobileSize={"80px"}
+            background={"transparent"}
+            text="Connecting ..."
+            textColor="#4ade80"
+          />{" "}
+        </div>
       </div>
     );
   }
