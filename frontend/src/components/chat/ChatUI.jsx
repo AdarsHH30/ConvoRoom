@@ -1,20 +1,37 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+  lazy,
+  Suspense,
+} from "react";
 import { flushSync } from "react-dom";
-import { ChatHeader } from "./ChatHeader";
-import { MessageList } from "./MessageList";
-import { ChatInput } from "./ChatInput";
 import { getUserIdentity } from "../../utils/userIdentification";
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-const VITE_WS_API = import.meta.env.VITE_WS_API;
+import { BoxesLoader } from "react-awesome-loaders";
+// Lazy load components
+const ChatHeader = lazy(() =>
+  import("./ChatHeader").then((module) => ({ default: module.ChatHeader }))
+);
+const MessageList = lazy(() =>
+  import("./MessageList").then((module) => ({ default: module.MessageList }))
+);
+const ChatInput = lazy(() =>
+  import("./ChatInput").then((module) => ({ default: module.ChatInput }))
+);
 
 // Constants
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const VITE_WS_API = import.meta.env.VITE_WS_API;
 const NEW_ROOM_THRESHOLD = 2000;
 const TOAST_DURATION = 1500;
 const TOAST_FADE_DURATION = 300;
+const MESSAGE_DEDUPE_WINDOW = 5000;
+const MESSAGE_CLEANUP_INTERVAL = 10000;
 
-// Utility functions
+// Memoized utility functions
 const extractLanguage = (messageText) => {
   if (!messageText) return null;
   const match = messageText.match(/^```(\w*)\n/);
@@ -85,6 +102,13 @@ const showToast = (message, duration = TOAST_DURATION) => {
   }, duration);
 };
 
+// Loading component
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center p-4">
+    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+  </div>
+);
+
 function ChatUI({ roomId: propRoomId, onConnectionChange }) {
   // State management
   const [messages, setMessages] = useState([]);
@@ -101,22 +125,44 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
   // Refs
   const messagesEndRef = useRef(null);
   const wsRef = useRef(null);
-  const recentMessagesRef = useRef(new Map()); // Track recent messages to prevent duplicates
+  const recentMessagesRef = useRef(new Map());
+  const cleanupTimerRef = useRef(null);
 
-  // Get room ID from URL or props
-  const roomId = propRoomId || window.location.pathname.split("/").pop();
+  // Memoized values
+  const roomId = useMemo(
+    () => propRoomId || window.location.pathname.split("/").pop(),
+    [propRoomId]
+  );
+
+  const wsUrl = useMemo(() => {
+    let url = VITE_WS_API;
+    if (!url.endsWith("/")) {
+      url += "/";
+    }
+    return `${url}ws/room/${roomId}/`;
+  }, [roomId]);
+
+  const apiUrl = useMemo(() => {
+    return `${BACKEND_URL}${
+      BACKEND_URL.endsWith("/") ? "" : "/"
+    }api/get_chat_history/${roomId}/`;
+  }, [roomId]);
 
   // Initialize username
   useEffect(() => {
-    try {
-      const { username: storedUsername } = getUserIdentity();
-      setUsername(storedUsername);
-    } catch (_error) {
-      console.error("Error loading user identity:", _error);
-    }
+    const initializeUser = async () => {
+      try {
+        const { username: storedUsername } = getUserIdentity();
+        setUsername(storedUsername);
+      } catch (error) {
+        console.error("Error loading user identity:", error);
+      }
+    };
+
+    initializeUser();
   }, []);
 
-  // Load recent rooms
+  // Load recent rooms with debouncing
   useEffect(() => {
     const loadRecentRooms = () => {
       try {
@@ -124,79 +170,99 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
           localStorage.getItem("recentRooms") || "[]"
         );
         setRecentRooms(currentRooms.filter((room) => room.id !== roomId));
-      } catch (_error) {
-        console.error("Error loading recent rooms:", _error);
+      } catch (error) {
+        console.error("Error loading recent rooms:", error);
         setRecentRooms([]);
       }
     };
 
-    loadRecentRooms();
+    const timeoutId = setTimeout(loadRecentRooms, 100);
+    return () => clearTimeout(timeoutId);
   }, [roomId]);
 
-  // Fetch chat history
+  // Cleanup old message deduplication entries
   useEffect(() => {
-    const fetchChatHistory = async () => {
-      if (!roomId || !username) {
-        return;
-      }
-
-      // Skip history fetch for temporary rooms (during optimistic creation)
-      if (roomId.startsWith("temp_")) {
-        return;
-      }
-
-      try {
-        const userRooms = JSON.parse(localStorage.getItem("userRooms") || "[]");
-        const thisRoom = userRooms.find((room) => room.id === roomId);
-
-        // Skip history fetch for new rooms
-        if (thisRoom) {
-          const creationTime = new Date(thisRoom.timestamp).getTime();
-          const now = new Date().getTime();
-          const isNewRoom = now - creationTime < NEW_ROOM_THRESHOLD;
-
-          if (isNewRoom) {
-            return;
-          }
+    const cleanupOldEntries = () => {
+      const now = Date.now();
+      for (const [key, timestamp] of recentMessagesRef.current.entries()) {
+        if (now - timestamp > MESSAGE_CLEANUP_INTERVAL) {
+          recentMessagesRef.current.delete(key);
         }
-
-        setIsLoadingHistory(true);
-
-        const apiUrl = `${BACKEND_URL}${
-          BACKEND_URL.endsWith("/") ? "" : "/"
-        }api/get_chat_history/${roomId}/`;
-        const response = await fetch(apiUrl);
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-
-        if (!data?.messages || !Array.isArray(data.messages)) {
-          console.warn("Invalid chat history format received");
-          return;
-        }
-
-        const formattedMessages = data.messages.map((msg) =>
-          createMessageObject(msg.sender, msg.message, {
-            id: generateMessageId(msg.sender, msg.message),
-            timestamp: msg.timestamp,
-          })
-        );
-
-        setMessages(formattedMessages);
-      } catch (_error) {
-        console.error("Error fetching chat history:", _error);
-      } finally {
-        setIsLoadingHistory(false);
       }
     };
 
-    fetchChatHistory();
-  }, [roomId, username]);
+    cleanupTimerRef.current = setInterval(
+      cleanupOldEntries,
+      MESSAGE_CLEANUP_INTERVAL
+    );
+    return () => {
+      if (cleanupTimerRef.current) {
+        clearInterval(cleanupTimerRef.current);
+      }
+    };
+  }, []);
 
-  // WebSocket message handler
+  // Optimized chat history fetch
+  const fetchChatHistory = useCallback(async () => {
+    if (!roomId || !username || roomId.startsWith("temp_")) {
+      return;
+    }
+
+    try {
+      const userRooms = JSON.parse(localStorage.getItem("userRooms") || "[]");
+      const thisRoom = userRooms.find((room) => room.id === roomId);
+
+      if (thisRoom) {
+        const creationTime = new Date(thisRoom.timestamp).getTime();
+        const now = new Date().getTime();
+        const isNewRoom = now - creationTime < NEW_ROOM_THRESHOLD;
+
+        if (isNewRoom) {
+          return;
+        }
+      }
+
+      setIsLoadingHistory(true);
+
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          "Cache-Control": "no-cache",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (!data?.messages || !Array.isArray(data.messages)) {
+        console.warn("Invalid chat history format received");
+        return;
+      }
+
+      // Batch process messages
+      const formattedMessages = data.messages.map((msg) =>
+        createMessageObject(msg.sender, msg.message, {
+          id: generateMessageId(msg.sender, msg.message),
+          timestamp: msg.timestamp,
+        })
+      );
+
+      setMessages(formattedMessages);
+    } catch (error) {
+      console.error("Error fetching chat history:", error);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  }, [roomId, username, apiUrl]);
+
+  useEffect(() => {
+    fetchChatHistory();
+  }, [fetchChatHistory]);
+
+  // Optimized WebSocket message handler
   const handleWebSocketMessage = useCallback(
     (event) => {
       try {
@@ -208,8 +274,6 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
 
         const messageSender = data.username || "Unknown";
 
-        // Skip messages from the current user to prevent duplicates
-        // (since we already add user messages immediately in sendMessage)
         if (messageSender === username) {
           return;
         }
@@ -217,50 +281,51 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
         const messageKey = `${messageSender}-${data.message}`;
         const now = Date.now();
 
-        // Check if we've seen this exact message recently (within 5 seconds)
         const lastSeenTime = recentMessagesRef.current.get(messageKey);
-        if (lastSeenTime && now - lastSeenTime < 5000) {
-          return; // Skip duplicate message
+        if (lastSeenTime && now - lastSeenTime < MESSAGE_DEDUPE_WINDOW) {
+          return;
         }
 
-        // Record this message
         recentMessagesRef.current.set(messageKey, now);
 
-        // Clean up old entries (older than 10 seconds)
-        for (const [key, timestamp] of recentMessagesRef.current.entries()) {
-          if (now - timestamp > 10000) {
-            recentMessagesRef.current.delete(key);
-          }
-        }
-
         const newMessage = createMessageObject(messageSender, data.message);
-        setMessages((prev) => [...prev, newMessage]);
 
-        // Auto-scroll if user is at bottom
+        setMessages((prev) => {
+          // Prevent duplicate messages in state
+          const isDuplicate = prev.some(
+            (msg) =>
+              msg.sender === messageSender &&
+              msg.text === data.message &&
+              Math.abs(new Date(msg.timestamp).getTime() - now) <
+                MESSAGE_DEDUPE_WINDOW
+          );
+
+          if (isDuplicate) {
+            return prev;
+          }
+
+          return [...prev, newMessage];
+        });
+
         if (!showScrollButton) {
-          setTimeout(() => {
+          requestAnimationFrame(() => {
             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-          }, 100);
+          });
         }
-      } catch (_error) {
-        console.error("WebSocket message parsing error:", _error);
+      } catch (error) {
+        console.error("WebSocket message parsing error:", error);
       }
     },
     [showScrollButton, username]
   );
 
-  // WebSocket connection management
+  // Optimized WebSocket connection
   useEffect(() => {
     if (!username || !roomId) {
       return;
     }
 
-    let wsUrl = VITE_WS_API;
-    if (!wsUrl.endsWith("/")) {
-      wsUrl += "/";
-    }
-
-    const ws = new WebSocket(`${wsUrl}ws/room/${roomId}/`);
+    const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     const handleOpen = () => {
@@ -274,7 +339,7 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
       onConnectionChange?.(false);
     };
 
-    const handleClose = (event) => {
+    const handleClose = () => {
       setIsConnected(false);
       onConnectionChange?.(false);
     };
@@ -285,40 +350,37 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
     ws.addEventListener("close", handleClose);
 
     return () => {
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.close(1000, "Component unmounted");
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close(1000, "Component unmounted");
       }
     };
-  }, [roomId, handleWebSocketMessage, username]);
+  }, [roomId, handleWebSocketMessage, username, wsUrl, onConnectionChange]);
 
-  // Send message function
+  // Optimized send message function
   const sendMessage = useCallback(async () => {
     if (!inputText.trim() || isSending || !isConnected || !username) {
       return;
     }
 
     const messageToSend = inputText.trim();
+    const userMessage = createMessageObject(username, messageToSend);
 
-    // Clear input immediately
     flushSync(() => {
       setInputText("");
+      setMessages((prev) => [...prev, userMessage]);
     });
 
     setIsSending(true);
 
-    // Add user message to UI - always add, no deduplication for user messages
-    const userMessage = createMessageObject(username, messageToSend);
-
-    flushSync(() => {
-      setMessages((prev) => [...prev, userMessage]);
+    // Auto-scroll
+    requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     });
-
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 
     try {
       setIsTyping(true);
 
-      // Send via WebSocket for real-time broadcasting to other users
+      // Send via WebSocket
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(
           JSON.stringify({
@@ -330,7 +392,7 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
         );
       }
 
-      // Send to API for AI response
+      // Send to API
       const response = await fetch(`${BACKEND_URL}api/data/`, {
         method: "POST",
         headers: {
@@ -350,33 +412,25 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
       const apiData = await response.json();
       const aiResponse = apiData?.response;
 
-      setIsTyping(false);
-
-      // Add AI response
       if (aiResponse) {
         const aiMessageKey = `AI-${aiResponse}`;
         const now = Date.now();
 
-        // Check if we've seen this AI response recently (within 5 seconds)
         const lastAiTime = recentMessagesRef.current.get(aiMessageKey);
-        if (!lastAiTime || now - lastAiTime >= 5000) {
-          // Record this AI response
+        if (!lastAiTime || now - lastAiTime >= MESSAGE_DEDUPE_WINDOW) {
           recentMessagesRef.current.set(aiMessageKey, now);
 
           const aiMessage = createMessageObject("AI", aiResponse);
           setMessages((prev) => [...prev, aiMessage]);
 
-          setTimeout(() => {
+          requestAnimationFrame(() => {
             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-          }, 100);
+          });
         }
       }
     } catch (error) {
       console.error("Message sending failed:", error);
-
-      // Remove user message on error
       setMessages((prev) => prev.filter((msg) => msg.id !== userMessage.id));
-
       showToast("Failed to send message. Please try again.");
     } finally {
       setIsTyping(false);
@@ -384,11 +438,11 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
     }
   }, [inputText, isSending, isConnected, roomId, username]);
 
-  // Copy to clipboard function
-  const copyToClipboard = useCallback((text) => {
+  // Optimized copy function
+  const copyToClipboard = useCallback(async (text) => {
     try {
       const cleanedText = text.replace(/^```[\w]*\n|\n```$/g, "");
-      navigator.clipboard.writeText(cleanedText);
+      await navigator.clipboard.writeText(cleanedText);
       showToast("Copied to clipboard!");
     } catch (error) {
       console.error("Failed to copy to clipboard:", error);
@@ -401,14 +455,58 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
     window.location.pathname = `/room/${id}`;
   }, []);
 
+  // Memoized props
+  const chatHeaderProps = useMemo(
+    () => ({
+      isConnected,
+      username,
+      recentRooms,
+      showRecentRooms,
+      setShowRecentRooms,
+      navigateToRoom,
+    }),
+    [isConnected, username, recentRooms, showRecentRooms, navigateToRoom]
+  );
+
+  const messageListProps = useMemo(
+    () => ({
+      messages,
+      isTyping,
+      username,
+      copyToClipboard,
+      showScrollButton,
+      setShowScrollButton,
+      messagesEndRef,
+    }),
+    [messages, isTyping, username, copyToClipboard, showScrollButton]
+  );
+
+  const chatInputProps = useMemo(
+    () => ({
+      inputText,
+      setInputText,
+      sendMessage,
+      isSending,
+      isConnected,
+      username,
+      isEmpty: messages.length === 0,
+    }),
+    [inputText, sendMessage, isSending, isConnected, username, messages.length]
+  );
+
   // Loading state
   if (isLoadingHistory) {
     return (
-      <div className="w-full max-w-5xl mx-auto p-2 md:p-4 h-[90vh] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading chat history...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen bg-transparent">
+        <BoxesLoader
+          boxColor={"#4ade80"}
+          shadowColor={"#999999"}
+          desktopSize={"150px"}
+          mobileSize={"80px"}
+          background={"transparent"}
+          text="Connecting ..."
+          textColor="#4ade80"
+        />{" "}
       </div>
     );
   }
@@ -416,34 +514,17 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
   return (
     <div className="w-full max-w-5xl mx-auto p-1 sm:p-2 md:p-4 h-[calc(100vh-8rem)] sm:h-[90vh] flex flex-col">
       <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col overflow-hidden w-full min-h-0">
-        <ChatHeader
-          isConnected={isConnected}
-          username={username}
-          recentRooms={recentRooms}
-          showRecentRooms={showRecentRooms}
-          setShowRecentRooms={setShowRecentRooms}
-          navigateToRoom={navigateToRoom}
-        />
+        <Suspense fallback={<LoadingSpinner />}>
+          <ChatHeader {...chatHeaderProps} />
+        </Suspense>
 
-        <MessageList
-          messages={messages}
-          isTyping={isTyping}
-          username={username}
-          copyToClipboard={copyToClipboard}
-          showScrollButton={showScrollButton}
-          setShowScrollButton={setShowScrollButton}
-          messagesEndRef={messagesEndRef}
-        />
+        <Suspense fallback={<LoadingSpinner />}>
+          <MessageList {...messageListProps} />
+        </Suspense>
 
-        <ChatInput
-          inputText={inputText}
-          setInputText={setInputText}
-          sendMessage={sendMessage}
-          isSending={isSending}
-          isConnected={isConnected}
-          username={username}
-          isEmpty={messages.length === 0}
-        />
+        <Suspense fallback={<LoadingSpinner />}>
+          <ChatInput {...chatInputProps} />
+        </Suspense>
       </div>
     </div>
   );
