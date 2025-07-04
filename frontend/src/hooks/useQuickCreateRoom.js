@@ -13,27 +13,21 @@ export const useQuickCreateRoom = () => {
     setIsCreating(true);
 
     try {
-      // Generate temporary room ID for instant navigation
-    const tempRoomId = `${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-
-      // Navigate immediately
-      navigate(`/room/${tempRoomId}`);
-
-      // Create room in background
+      // Generate room ID in frontend
+      const roomId = `${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      console.log("Generated Room ID:", roomId);
+      navigate(`/room/${roomId}`);
       const response = await fetch(`${BACKEND_URL}api/create_room/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomId })
       });
 
       const data = await response.json();
 
-      if (data.roomId) {
-        // Update URL with real room ID
-        window.history.replaceState(null, "", `/room/${data.roomId}`);
-
-        // Store in localStorage
+      if (data.success) {
         const newRoom = {
-          id: data.roomId,
+          id: roomId,
           timestamp: new Date().toISOString(),
         };
 
@@ -44,17 +38,12 @@ export const useQuickCreateRoom = () => {
           "userRooms",
           JSON.stringify([newRoom, ...existingRooms])
         );
-
-        // Notify room component
-        window.dispatchEvent(
-          new CustomEvent("roomIdUpdated", {
-            detail: { newRoomId: data.roomId, tempRoomId },
-          })
-        );
+      } else {
+        console.error("Room creation failed:", data.error);
+        navigate("/");
       }
     } catch (error) {
       console.error("Room creation failed:", error);
-      // Navigate back to home if creation failed
       navigate("/");
     } finally {
       setIsCreating(false);

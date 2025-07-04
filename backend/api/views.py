@@ -123,9 +123,20 @@ rooms = {}
 
 @api_view(["POST"])
 def create_room(request):
-    room_id = (str(uuid.uuid4())[:6]).upper()
-    rooms[room_id] = {"participants": 0, "max_participants": 4}
-    return Response({"roomId": room_id})
+    try:
+        room_id = request.data.get("roomId")
+
+        if not room_id:
+            room_id = str(uuid.uuid4())
+
+        rooms[room_id] = {"participants": 0, "max_participants": 4}
+        print(f"Room created with ID: {room_id}")
+
+        return Response(
+            {"success": True, "message": "Room created successfully", "roomId": room_id}
+        )
+    except Exception as e:
+        return Response({"success": False, "error": str(e)}, status=500)
 
 
 @api_view(["POST"])
