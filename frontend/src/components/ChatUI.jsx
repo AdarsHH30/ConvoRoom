@@ -252,6 +252,11 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
 
   return (
     <>
+      {/* {!isConnected && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <LoadingSpinner text="Connecting to chat server..." />
+        </div>
+      )} */}
       <div className="w-full max-w-5xl mx-auto p-1 sm:p-2 md:p-4 h-[calc(100vh-8rem)] sm:h-[90vh] flex flex-col">
         <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col overflow-hidden w-full min-h-0">
           <Suspense fallback={<LoadingSpinner />}>
