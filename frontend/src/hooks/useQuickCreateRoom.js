@@ -9,42 +9,63 @@ export const useQuickCreateRoom = () => {
 
   const createRoom = async () => {
     if (isCreating) return;
-
     setIsCreating(true);
 
     try {
-      // Generate room ID in frontend
-      const roomId = `${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-      console.log("Generated Room ID:", roomId);
-      navigate(`/room/${roomId}`);
-      const response = await fetch(`${BACKEND_URL}api/create_room/`, {
+      
+      const tempRoomId = `${Date.now()}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      navigate(`/room/${tempRoomId}`);
+
+      const newRoom = {
+        id: tempRoomId,
+        timestamp: new Date().toISOString(),
+        temporary: true,
+      };
+
+      const existingRooms = JSON.parse(
+        localStorage.getItem("userRooms") || "[]"
+      );
+      localStorage.setItem(
+        "userRooms",
+        JSON.stringify([newRoom, ...existingRooms])
+      );
+
+      fetch(`${BACKEND_URL}api/create_room/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roomId })
-      });
+        body: JSON.stringify({ roomId: tempRoomId }), // Optional: use same ID to avoid changing
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success || data.roomId) {
+            const actualRoomId = data.roomId || tempRoomId;
 
-      const data = await response.json();
+            if (actualRoomId !== tempRoomId) {
+              window.history.replaceState(null, "", `/room/${actualRoomId}`);
 
-      if (data.success) {
-        const newRoom = {
-          id: roomId,
-          timestamp: new Date().toISOString(),
-        };
+              window.dispatchEvent(
+                new CustomEvent("roomIdUpdated", {
+                  detail: { newRoomId: actualRoomId, tempRoomId },
+                })
+              );
 
-        const existingRooms = JSON.parse(
-          localStorage.getItem("userRooms") || "[]"
-        );
-        localStorage.setItem(
-          "userRooms",
-          JSON.stringify([newRoom, ...existingRooms])
-        );
-      } else {
-        console.error("Room creation failed:", data.error);
-        navigate("/");
-      }
+              const rooms = JSON.parse(
+                localStorage.getItem("userRooms") || "[]"
+              );
+              const updatedRooms = rooms.map((room) =>
+                room.id === tempRoomId
+                  ? { ...room, id: actualRoomId, temporary: false }
+                  : room
+              );
+              localStorage.setItem("userRooms", JSON.stringify(updatedRooms));
+            }
+          }
+        })
+        .catch((error) => {
+          console.error("Room creation API error:", error);
+        });
     } catch (error) {
       console.error("Room creation failed:", error);
-      navigate("/");
     } finally {
       setIsCreating(false);
     }
