@@ -13,7 +13,7 @@ export const useQuickCreateRoom = () => {
 
     try {
       
-      const tempRoomId = `${Date.now()}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      const tempRoomId = Math.random().toString(36).substring(2, 6).toUpperCase();
       navigate(`/room/${tempRoomId}`);
 
       const newRoom = {
