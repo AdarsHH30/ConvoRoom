@@ -75,16 +75,12 @@ const Room = () => {
 
   return (
     <div className="w-full h-screen flex flex-col">
-      {/* Past Rooms Component with action buttons */}
       <PastRooms showActionButtons={true} />
 
       <div className="flex justify-between items-center p-2 sm:p-4 bg-[var(--background)] border-b">
-        <button
-          onClick={() => navigate("/")}
-          className="p-1.5 sm:p-2 flex items-center gap-1 sm:gap-2 text-white rounded-lg hover:bg-green-900 transition min-w-0"
-        >
+        <div className="p-1.5 sm:p-2 flex items-center gap-1 sm:gap-2 text-white rounded-lg hover:bg-green-900 transition min-w-0">
           {/* <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" /> */}
-        </button>
+        </div>
 
         {/* Logo in center with online status */}
         <div className="flex items-center justify-center absolute left-1/2 transform -translate-x-1/2">

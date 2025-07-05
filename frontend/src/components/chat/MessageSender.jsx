@@ -90,7 +90,7 @@ const MessageSender = forwardRef(
       [sendMessage]
     );
 
-    return null; // This is a logic-only component
+    return null;
   }
 );
 
