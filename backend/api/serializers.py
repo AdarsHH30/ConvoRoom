@@ -11,7 +11,7 @@ class RoomSerializer:
             "member_count": obj.members.count(),
         }
         return pickle.dumps(data)
- 
+
     def deserialize(self, data):
         return pickle.loads(data)
 

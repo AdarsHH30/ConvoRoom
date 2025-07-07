@@ -13,6 +13,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from pymongo import MongoClient
 from datetime import datetime
+import threading
 
 load_dotenv()
 API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -124,19 +125,50 @@ rooms = {}
 @api_view(["POST"])
 def create_room(request):
     try:
-        room_id = request.data.get("roomId")
-
-        if not room_id:
-            room_id = str(uuid.uuid4())
+        room_id = request.data.get("roomId", str(uuid.uuid4())[:8])
 
         rooms[room_id] = {"participants": 0, "max_participants": 4}
-        print(f"Room created with ID: {room_id}")
 
-        return Response(
-            {"success": True, "message": "Room created successfully", "roomId": room_id}
-        )
+        response = {
+            "success": True,
+            "message": "Room created successfully",
+            "roomId": room_id,
+        }
+
+        # Start background task for non-critical operations
+
+        threading.Thread(
+            target=initialize_room_resources,
+            args=(room_id, request.data.get("room_name", "New Room")),
+        ).start()
+
+        return Response(response)
     except Exception as e:
         return Response({"success": False, "error": str(e)}, status=500)
+
+
+def initialize_room_resources(room_id, room_name):
+    """Perform non-critical initialization tasks in background"""
+    try:
+        # Store in MongoDB asynchronously
+        room_data = {
+            "room_id": room_id,
+            "name": room_name,
+            "created_at": datetime.utcnow().isoformat(),
+            "participants": 0,
+            "max_participants": 4,
+            "active": True,
+        }
+        db["rooms"].insert_one(room_data)
+
+        # Initialize AI conversation if needed
+        if room_id not in room_conversations:
+            memory = ConversationBufferMemory(return_messages=True)
+            room_conversations[room_id] = ConversationChain(
+                llm=chat, memory=memory, verbose=False
+            )
+    except Exception as e:
+        print(f"Error in background initialization: {e}")
 
 
 @api_view(["POST"])
