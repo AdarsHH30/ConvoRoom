@@ -118,7 +118,9 @@ export const useWebSocket = (wsUrl, username, roomId, onMessage, onConnectionCha
   }, []);
 
   useEffect(() => {
-    if (!isConnected) return;
+    if (!isConnected) 
+    
+      return;
     
     const pingInterval = setInterval(() => {
       sendMessage({ type: 'PING' });

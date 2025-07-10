@@ -10,20 +10,15 @@ import React, {
 } from "react";
 import { flushSync } from "react-dom";
 import { getUserIdentity } from "../utils/userIdentification";
-
-// Custom hooks
 import { useWebSocket } from "../hooks/useWebSocket";
 import { useMessageDeduplication } from "../hooks/useMessageDeduplication";
 import { useChatHistory } from "../hooks/useChatHistory";
 import { useRecentRooms } from "../hooks/useRecentRooms";
 import { createMessageObject } from "../utils/messageUtils";
-
-// Components
 import LoadingSpinner from "./chat/LoadingSpinner";
+import { ConnectionLoadingOverlay } from "./chat/ConnectionLoadingOverlay";
 import ToastManager from "./chat/ToastManager";
 import MessageSender from "./chat/MessageSender";
-
-// Lazy load components
 const ChatHeader = lazy(() =>
   import("./chat/ChatHeader").then((module) => ({ default: module.ChatHeader }))
 );
@@ -76,7 +71,6 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
     BACKEND_URL
   );
 
-  // WebSocket message handler
   const handleWebSocketMessage = useCallback(
     (event) => {
       try {
@@ -86,10 +80,8 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
 
         const messageSender = data.username || "Unknown";
 
-        // Skip messages from current user (already handled locally)
         if (messageSender === username) return;
 
-        // Skip AI messages (they're handled by the MessageSender component)
         if (messageSender === "AI") return;
 
         const messageKey = `${messageSender}-${data.message}`;
@@ -252,28 +244,21 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
 
   return (
     <>
-      {/* {!isConnected && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <LoadingSpinner text="Connecting to chat server..." />
-        </div>
-      )} */}
+      {!isConnected && <ConnectionLoadingOverlay />}
       <div className="w-full max-w-5xl mx-auto p-1 sm:p-2 md:p-4 h-[calc(100vh-8rem)] sm:h-[90vh] flex flex-col">
         <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col overflow-hidden w-full min-h-0">
           <Suspense fallback={<LoadingSpinner />}>
             <ChatHeader {...chatHeaderProps} />
           </Suspense>
-
           <Suspense fallback={<LoadingSpinner />}>
             <MessageList {...messageListProps} />
             <div ref={messagesEndRef} />
           </Suspense>
-
           <Suspense fallback={<LoadingSpinner />}>
             <ChatInput {...chatInputProps} />
           </Suspense>
         </div>
       </div>
-
       <MessageSender
         ref={messageSenderRef}
         backendUrl={BACKEND_URL}
@@ -284,7 +269,6 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
         onTypingChange={setIsTyping}
         onError={handleSendError}
       />
-
       <ToastManager />
     </>
   );
