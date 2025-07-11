@@ -3,11 +3,11 @@ import { Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./components/ui/theme-provider";
 import "./App.css";
-import { SunspotLoader } from "react-awesome-loaders";
 import { BoxesLoader } from "react-awesome-loaders";
 
 const Home = lazy(() => import("./pages/Home"));
 const Room = lazy(() => import("./pages/Room"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 function App() {
   return (
@@ -31,6 +31,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/room/:roomId" element={<Room />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </ThemeProvider>
