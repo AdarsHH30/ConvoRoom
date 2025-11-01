@@ -31,9 +31,7 @@ const MessageSender = forwardRef(
           if (wsRef.current?.readyState === WebSocket.OPEN) {
             wsRef.current.send(
               JSON.stringify({
-                type: "chat_message",
                 message: messageToSend,
-                roomId,
                 username,
               })
             );

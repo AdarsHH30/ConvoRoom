@@ -13,14 +13,9 @@ export const useWebSocket = (wsUrl, username, roomId, onMessage, onConnectionCha
     setReconnectAttempts(0);
     onConnectionChange?.(true);
     
-    if (wsRef.current?.readyState === WebSocket.OPEN && username && roomId) {
-      wsRef.current.send(JSON.stringify({
-        type: 'JOIN',
-        username,
-        roomId
-      }));
-    }
-  }, [onConnectionChange, username, roomId, wsUrl]);
+    // Don't send JOIN message on connection
+    // The backend will handle connection in the connect() method
+  }, [onConnectionChange]);
 
   const handleMessage = useCallback((event) => {
     try {
@@ -123,7 +118,8 @@ export const useWebSocket = (wsUrl, username, roomId, onMessage, onConnectionCha
       return;
     
     const pingInterval = setInterval(() => {
-      sendMessage({ type: 'PING' });
+      // Send a ping message with the required 'message' field
+      sendMessage({ message: 'ping', username: 'system' });
     }, 30000); // 30 seconds
     
     return () => {
