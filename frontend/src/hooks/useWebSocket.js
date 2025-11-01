@@ -19,11 +19,17 @@ export const useWebSocket = (wsUrl, username, roomId, onMessage, onConnectionCha
 
   const handleMessage = useCallback((event) => {
     try {
+      // Check if event.data exists and is not empty
+      if (!event.data || event.data === 'undefined' || event.data.trim() === '') {
+        console.warn("Received empty or invalid WebSocket message");
+        return;
+      }
+      
       const data = JSON.parse(event.data);
       onMessage?.(data);
     } catch (error) {
-      console.error("Failed to parse WebSocket message:", error);
-      onMessage?.(event); 
+      console.error("Failed to parse WebSocket message:", error, "Data:", event.data);
+      // Don't pass the event to onMessage if parsing fails
     }
   }, [onMessage]);
 

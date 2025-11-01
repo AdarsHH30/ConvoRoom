@@ -58,6 +58,12 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
 
   const wsUrl = useMemo(() => {
     let url = VITE_WS_API;
+
+    // Automatically use wss:// if the page is served over HTTPS
+    if (window.location.protocol === "https:" && url.startsWith("ws://")) {
+      url = url.replace("ws://", "wss://");
+    }
+
     if (!url.endsWith("/")) url += "/";
     return `${url}ws/room/${roomId}/`;
   }, [roomId]);
@@ -74,7 +80,11 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
   const handleWebSocketMessage = useCallback(
     (event) => {
       try {
-        const data = JSON.parse(event.data);
+        // Check if data is already parsed (object) or needs parsing (has .data property)
+        const data =
+          typeof event === "object" && !event.data
+            ? event
+            : JSON.parse(event.data);
 
         if (data.type !== "chat_message") return;
 
