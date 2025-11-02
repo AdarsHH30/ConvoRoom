@@ -62,7 +62,6 @@ const MessageSender = forwardRef(
             onMessageSent(aiMessage);
           }
         } catch (error) {
-          console.error("Message sending failed:", error);
           onError(userMessage.id);
           window.showToast?.("Failed to send message. Please try again.");
         } finally {

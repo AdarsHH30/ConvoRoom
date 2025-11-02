@@ -31,18 +31,16 @@ export const useWebSocket = (wsUrl, username, roomId, onMessage, onConnectionCha
   const handleMessage = useCallback((event) => {
     try {
       if (!event.data || event.data === 'undefined' || event.data.trim() === '') {
-        console.warn("Received empty or invalid WebSocket message");
         return;
       }
       const data = JSON.parse(event.data);
       onMessage?.(data);
     } catch (error) {
-      console.error("Failed to parse WebSocket message:", error, "Data:", event.data);
+      // Silently handle parse errors in production
     }
   }, [onMessage]);
 
   const handleError = useCallback((error) => {
-    console.error("WebSocket error:", error);
     cleanup();
     setIsConnected(false);
     onConnectionChange?.(false);
@@ -56,20 +54,16 @@ export const useWebSocket = (wsUrl, username, roomId, onMessage, onConnectionCha
     // Only attempt reconnection for abnormal closures
     if (event.code !== 1000 && event.code !== 1001 && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
       const delay = RECONNECT_INTERVAL * Math.pow(1.5, reconnectAttempts); // Exponential backoff
-      console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS})`);
       
       reconnectTimeoutRef.current = setTimeout(() => {
         setReconnectAttempts(prev => prev + 1);
         initializeWebSocket();
       }, delay);
-    } else if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-      console.warn(`Maximum reconnection attempts (${MAX_RECONNECT_ATTEMPTS}) reached.`);
     }
   }, [onConnectionChange, reconnectAttempts, cleanup]);
 
   const initializeWebSocket = useCallback(() => {
     if (!username || !roomId || !wsUrl) {
-      console.warn("Missing required WebSocket parameters");
       return;
     }
 
@@ -88,14 +82,12 @@ export const useWebSocket = (wsUrl, username, roomId, onMessage, onConnectionCha
     }
 
     try {
-      console.log(`Connecting to WebSocket: ${wsUrl}`);
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       // Set connection timeout
       connectionTimeoutRef.current = setTimeout(() => {
         if (ws.readyState !== WebSocket.OPEN) {
-          console.warn("WebSocket connection timeout");
           ws.close();
           handleClose({ code: 1006 }); // Abnormal closure
         }
@@ -106,7 +98,6 @@ export const useWebSocket = (wsUrl, username, roomId, onMessage, onConnectionCha
       ws.addEventListener("error", handleError);
       ws.addEventListener("close", handleClose);
     } catch (error) {
-      console.error("Failed to create WebSocket:", error);
       handleError(error);
     }
   }, [wsUrl, username, roomId, handleOpen, handleMessage, handleError, handleClose, cleanup]);
@@ -137,25 +128,12 @@ export const useWebSocket = (wsUrl, username, roomId, onMessage, onConnectionCha
         wsRef.current.send(messageString);
         return true;
       } catch (error) {
-        console.error("Failed to send WebSocket message:", error);
         return false;
       }
     } else {
-      console.warn(`Cannot send message, WebSocket state: ${wsRef.current?.readyState || 'undefined'}`);
       return false;
     }
   }, []);
-
-  // Heartbeat to keep connection alive
-  useEffect(() => {
-    if (!isConnected) return;
-    
-    const pingInterval = setInterval(() => {
-      sendMessage({ message: 'ping', username: 'system' });
-    }, 30000); // 30 seconds
-    
-    return () => clearInterval(pingInterval);
-  }, [isConnected, sendMessage]);
 
   return { 
     isConnected, 
