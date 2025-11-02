@@ -168,7 +168,10 @@ def initialize_room_resources(room_id, room_name):
                 llm=chat, memory=memory, verbose=False
             )
     except Exception as e:
-        print(f"Error in background initialization: {e}")
+        # TODO: Use proper logging instead of print
+        import logging
+
+        logging.error(f"Error in background initialization: {e}")
 
 
 @api_view(["POST"])

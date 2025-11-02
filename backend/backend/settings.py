@@ -9,16 +9,35 @@ dotenv.load_dotenv(BASE_DIR / ".env")
 # Port configuration
 PORT = int(os.getenv("PORT", "8000"))
 SECRET_KEY = os.getenv("PRODUCTION_KEY", "django-insecure-fallback-key")
+DEBUG = os.getenv("DEBUG", "False") == "True"
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+BACKEND_HOST = os.getenv("ALLOWED_HOSTS", "localhost").split(",")
 
-ALLOWED_HOSTS = ["*"]  # Allow all hosts for development;
+ALLOWED_HOSTS = BACKEND_HOST
 
 CORS_ALLOWED_ORIGINS = [FRONTEND_URL]
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+    "sec-websocket-key",
+    "sec-websocket-version",
+    "sec-websocket-extensions",
+    "sec-websocket-protocol",
+]
 
-CSRF_TRUSTED_ORIGINS = [FRONTEND_URL]
-
+CSRF_TRUSTED_ORIGINS = [
+    "https://convoroom-backend.onrender.com",
+    "http://localhost:8000",
+]
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -52,30 +71,27 @@ MIGRATION_MODULES = {
 }
 WSGI_APPLICATION = "backend.asgi.application"
 
-# ASGI/Channels
+# WebSocket and ASGI Configuration
 ASGI_APPLICATION = "backend.asgi.application"
-REDIS_URL = os.environ.get("redis_host", "redis://localhost:6379/0")
 
+# Get Redis URL from environment
+REDIS_URL = os.environ.get("REDIS_URL") or os.environ.get(
+    "redis_host", "redis://localhost:6379/0"
+)
+
+# Channel Layers Configuration
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
             "hosts": [REDIS_URL],
-            "capacity": 1000,  # Adjust as needed
+            "capacity": 1500,
+            "expiry": 10,
+            # Add these for better WebSocket handling
+            "symmetric_encryption_keys": [SECRET_KEY],
         },
     },
 }
-
-# # Test Redis connection
-# import channels.layers
-
-# try:
-#     channel_layer = channels.layers.get_channel_layer()
-#     async_to_sync(channel_layer.send)("test_channel", {"type": "test.message"})
-#     print("Redis connection successful")
-# except Exception as e:
-#     print(f"Redis connection failed: {e}")
-
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -113,3 +129,19 @@ USE_TZ = True
 
 # Static files
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Default primary key field type
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Security Settings
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = "DENY"
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True

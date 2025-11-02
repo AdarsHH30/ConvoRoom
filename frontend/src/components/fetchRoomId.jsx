@@ -13,7 +13,7 @@ const FetchRoomId = () => {
       setIsLoading(true);
       try {
         const response = await fetch(
-          `${process.env.VITE_BACKEND_URL}/api/room/generate`,
+          `${import.meta.env.VITE_BACKEND_URL}/api/room/generate`,
           {
             method: "POST",
             headers: {
