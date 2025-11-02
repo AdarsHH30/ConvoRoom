@@ -84,7 +84,7 @@ django==3.2.24
     #   channels
     #   django-cors-headers
     #   djangorestframework
-django-channels==0.7.0
+# django-channels==0.7.0
     # via -r requirements.in
 django-cors-headers==4.3.1
     # via -r requirements.in
