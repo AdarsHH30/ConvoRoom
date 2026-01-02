@@ -200,6 +200,9 @@ langchain-core==0.3.68
     #   langchain-text-splitters
 langchain-google-genai==2.1.6
     # via -r requirements.in
+    # via -r requirements.in
+    langchain-groq==0.2.1
+
 langchain-text-splitters==0.3.8
     # via
     #   -r requirements.in

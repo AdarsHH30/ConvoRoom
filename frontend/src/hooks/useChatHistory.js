@@ -45,6 +45,7 @@ export const useChatHistory = (roomId, username, backendUrl) => {
           createMessageObject(msg.sender, msg.message, {
             id: generateMessageId(msg.sender, msg.message),
             timestamp: msg.timestamp,
+            provider: msg.provider,
           })
         );
 

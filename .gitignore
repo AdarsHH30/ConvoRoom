@@ -35,6 +35,8 @@ about.txt
 .env.development.local
 .env.test.local
 .env.production.local
+convo.env
+*.env
 
 # OS specific
 .DS_Store

@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 
-function UserAvatar({ name = "Unknown", isAI = false }) {
+function UserAvatar({ name = "Unknown", isAI = false, provider }) {
   const getInitials = (name) => {
     if (!name || name === "Unknown") return "U";
     return name
@@ -9,6 +9,13 @@ function UserAvatar({ name = "Unknown", isAI = false }) {
       .substring(0, 2)
       .toUpperCase();
   };
+
+  const logoSrc = useMemo(() => {
+    if (!isAI) return null;
+    if (provider === "gemini") return "/logos/gemini.png";
+    if (provider === "groq") return "/logos/groq.png";
+    return "/vite.svg";
+  }, [isAI, provider]);
 
   const getUserColor = useMemo(() => {
     if (isAI) return null;
@@ -51,15 +58,23 @@ function UserAvatar({ name = "Unknown", isAI = false }) {
   }`;
 
   const avatarClass = `flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium text-white ${
-    isAI
-      ? "bg-purple-700 dark:bg-purple-800"
-      : getUserColor + " dark:" + getUserColor
+    isAI ? "bg-transparent" : getUserColor + " dark:" + getUserColor
   }`;
 
   return (
     <div className={containerClass}>
       {!isAI && <div className={nameClass}>{name}</div>}
-      <div className={avatarClass}>{isAI ? "AI" : getInitials(name)}</div>
+      <div className={avatarClass}>
+        {isAI ? (
+          <img
+            src={logoSrc}
+            alt={name}
+            className="w-full h-full object-contain"
+          />
+        ) : (
+          getInitials(name)
+        )}
+      </div>
       {isAI && <div className={nameClass}>{name}</div>}
     </div>
   );

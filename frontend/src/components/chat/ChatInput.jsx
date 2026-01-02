@@ -1,5 +1,6 @@
 "use client";
 import { PlaceholdersAndVanishInput } from "../ui/placeholders-and-vanish-input";
+import { AIModelSelector } from "./AIModelSelector";
 
 export function ChatInput({
   inputText,
@@ -9,6 +10,8 @@ export function ChatInput({
   isConnected,
   username,
   isEmpty,
+  onModelSelect,
+  hasMessages,
 }) {
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -29,6 +32,13 @@ export function ChatInput({
     <div className="pt-0 pb-2 sm:pt-6 sm:pb-6 px-0 sm:p-2 md:p-3 bg-[var(--background)] w-full">
       <div className="flex items-center justify-center w-full px-4">
         <div className="flex items-center gap-2 w-full max-w-2xl">
+          {/* AI Model Selector - only show before first message */}
+          {!hasMessages && (
+            <AIModelSelector
+              onModelSelect={onModelSelect}
+              disabled={isSending || !isConnected || !username}
+            />
+          )}
           <div className="flex-1 relative">
             <PlaceholdersAndVanishInput
               label="Type your message"

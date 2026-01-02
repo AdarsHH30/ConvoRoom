@@ -44,6 +44,10 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
   const [showRecentRooms, setShowRecentRooms] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [username, setUsername] = useState("");
+  const [selectedAIModel, setSelectedAIModel] = useState({
+    provider: "groq",
+    model: "llama-3.3-70b-versatile",
+  });
 
   // Refs
   const messagesEndRef = useRef(null);
@@ -92,12 +96,12 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
 
         if (messageSender === username) return;
 
-        if (messageSender === "AI") return;
-
         const messageKey = `${messageSender}-${data.message}`;
         if (checkDuplicate(messageKey)) return;
 
-        const newMessage = createMessageObject(messageSender, data.message);
+        const newMessage = createMessageObject(messageSender, data.message, {
+          provider: data.provider,
+        });
 
         setMessages((prev) => {
           const isDuplicate = prev.some(
@@ -125,7 +129,13 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
   );
 
   // WebSocket connection
-  const { isConnected, wsRef: hookWsRef } = useWebSocket(
+  const {
+    isConnected,
+    wsRef: hookWsRef,
+    connectionError,
+    reconnectAttempts,
+    reconnect,
+  } = useWebSocket(
     wsUrl,
     username,
     roomId,
@@ -152,12 +162,15 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
   // Message handlers
   const handleMessageSent = useCallback(
     (message) => {
+      const messageKey = `${message.sender}-${message.text}`;
+      checkDuplicate(messageKey);
+
       setMessages((prev) => [...prev, message]);
       requestAnimationFrame(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
       });
     },
-    [setMessages]
+    [setMessages, checkDuplicate]
   );
 
   const handleSendError = useCallback(
@@ -237,6 +250,8 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
       isConnected,
       username,
       isEmpty: messages.length === 0,
+      onModelSelect: setSelectedAIModel,
+      hasMessages: messages.length > 0,
     }),
     [
       inputText,
@@ -254,17 +269,23 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
 
   return (
     <>
-      {!isConnected && <ConnectionLoadingOverlay />}
+      {!isConnected && (
+        <ConnectionLoadingOverlay
+          error={connectionError}
+          reconnectAttempts={reconnectAttempts}
+          onRetry={reconnect}
+        />
+      )}
       <div className="w-full max-w-5xl mx-auto p-1 sm:p-2 md:p-4 h-[calc(100vh-8rem)] sm:h-[90vh] flex flex-col">
         <div className="flex-1 bg-[var(--background)] rounded-lg shadow-lg flex flex-col overflow-hidden w-full min-h-0">
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<LoadingSpinner fullScreen={false} />}>
             <ChatHeader {...chatHeaderProps} />
           </Suspense>
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<LoadingSpinner fullScreen={false} />}>
             <MessageList {...messageListProps} />
             <div ref={messagesEndRef} />
           </Suspense>
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<LoadingSpinner fullScreen={false} />}>
             <ChatInput {...chatInputProps} />
           </Suspense>
         </div>
@@ -278,6 +299,7 @@ function ChatUI({ roomId: propRoomId, onConnectionChange }) {
         onMessageSent={handleMessageSent}
         onTypingChange={setIsTyping}
         onError={handleSendError}
+        selectedAIModel={selectedAIModel}
       />
       <ToastManager />
     </>

@@ -9,6 +9,7 @@ urlpatterns = [
     # path("api/hello/", hello_world),
     path("api/create_room/", create_room),
     path("api/data/", getReactData),
+    path("api/models/", get_available_models),
     # path("api/insert/", insert_data),
     # path("api/get_chat_history/<str:room_id>/", get_chat_history),
     path("api/join_room/", join_room),

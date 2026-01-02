@@ -11,6 +11,7 @@ const MessageSender = forwardRef(
       onMessageSent,
       onTypingChange,
       onError,
+      selectedAIModel,
     },
     ref
   ) => {
@@ -37,15 +38,24 @@ const MessageSender = forwardRef(
             );
           }
 
+          // Prepare API request body with selected AI model
+          const requestBody = {
+            message: `${username}: ${messageToSend}`,
+            roomId,
+            username,
+          };
+
+          // Add AI model selection if available
+          if (selectedAIModel) {
+            requestBody.provider = selectedAIModel.provider;
+            requestBody.model = selectedAIModel.model;
+          }
+
           // Send to API
           const response = await fetch(`${backendUrl}api/data/`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              message: `${username}: ${messageToSend}`,
-              roomId,
-              username,
-            }),
+            body: JSON.stringify(requestBody),
           });
 
           if (!response.ok) {
@@ -58,7 +68,9 @@ const MessageSender = forwardRef(
           const aiResponse = apiData?.response;
 
           if (aiResponse) {
-            const aiMessage = createMessageObject("AI", aiResponse);
+            const aiMessage = createMessageObject("AI", aiResponse, {
+              provider: selectedAIModel?.provider,
+            });
             onMessageSent(aiMessage);
           }
         } catch (error) {
@@ -76,6 +88,7 @@ const MessageSender = forwardRef(
         onMessageSent,
         onTypingChange,
         onError,
+        selectedAIModel,
       ]
     );
 

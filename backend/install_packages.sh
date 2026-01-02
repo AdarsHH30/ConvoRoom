@@ -9,4 +9,5 @@ pip install --no-deps google-ai-generativelanguage==0.6.17
 pip install --no-deps google-generativeai==0.8.4
 pip install --no-deps langchain-google-genai==2.1.1
 
+pip install --no-deps langchain-groq==0.2.1
 pip install --no-deps langchain-text-splitters==0.3.7

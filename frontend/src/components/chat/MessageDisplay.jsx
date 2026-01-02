@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CodeBlock } from "@/components/ui/code-block";
@@ -10,11 +10,22 @@ export function MessageDisplay({ message, username, copyToClipboard }) {
   const isAIMessage = message.sender === "AI";
   const _isUserMessage = message.sender === username;
 
+  const aiName = useMemo(() => {
+    if (!isAIMessage) return message.sender;
+    if (message.provider === "gemini") return "Gemini";
+    if (message.provider === "groq") return "Llama";
+    return "ConvoAI";
+  }, [isAIMessage, message.sender, message.provider]);
+
   return (
     <div
       className={`flex flex-col ${isAIMessage ? "items-start" : "items-end"}`}
     >
-      <UserAvatar name={message.sender} isAI={isAIMessage} />
+      <UserAvatar
+        name={aiName}
+        isAI={isAIMessage}
+        provider={message.provider}
+      />
 
       <div
         className={`max-w-[85%] md:max-w-[80%] p-2.5 rounded-2xl message-bubble overflow-hidden ${
